@@ -1,0 +1,6 @@
+(define-module (xkbcommon config)
+  #:export (%libxkbcommon))
+(define %libxkbcommon
+  (delay
+    (dynamic-link
+     "@XKBCOMMON_LIBDIR@/libxkbcommon.so")))

@@ -1,0 +1,9 @@
+need
+
+autoconf
+automake
+pkg-config
+xkbcommon
+guile
+guile-bytestructure-class
+scheme-bytestructures

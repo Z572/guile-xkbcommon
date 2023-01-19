@@ -23,5 +23,6 @@ SUFFIXES = .scm .go
 moddir=$(prefix)/share/guile/site/$(GUILE_EFFECTIVE_VERSION)
 godir=$(libdir)/guile/$(GUILE_EFFECTIVE_VERSION)/site-ccache
 SOURCES = xkbcommon/config.scm \
+		xkbcommon/xkbregistry.scm \
 		xkbcommon/xkbcommon.scm \
 		xkbcommon/keysyms.scm

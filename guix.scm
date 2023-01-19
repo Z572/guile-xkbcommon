@@ -19,6 +19,7 @@
  (gnu packages pkg-config)
  (gnu packages texinfo)
  (gnu packages wm)
+ (gnu packages xml)
  (gnu packages freedesktop))
 
 (define %srcdir
@@ -38,7 +39,10 @@
      (list autoconf automake
            pkg-config
            guile-3.0-latest))
-    (inputs (list guile-3.0-latest libxkbcommon))
+    (inputs (list guile-3.0-latest
+                  libxkbcommon
+                  ;;; xkbregistry pc file require
+                  libxml2))
     (propagated-inputs
      (list
       (primitive-load

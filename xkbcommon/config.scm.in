@@ -1,6 +1,11 @@
 (define-module (xkbcommon config)
-  #:export (%libxkbcommon))
+  #:export (%libxkbcommon
+            %libxkbregistry))
 (define %libxkbcommon
   (delay
     (dynamic-link
      "@XKBCOMMON_LIBDIR@/libxkbcommon.so")))
+(define %libxkbregistry
+  (delay
+    (dynamic-link
+     "@XKBREGISTRY_LIBDIR@/libxkbregistry.so")))

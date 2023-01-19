@@ -24,9 +24,12 @@ guileobjectdir="${libdir}/guile/$GUILE_EFFECTIVE_VERSION/site-ccache"
 
 PKG_CHECK_MODULES([GUILE], [guile-3.0])
 PKG_CHECK_MODULES([XKBCOMMON],[xkbcommon])
+PKG_CHECK_MODULES([XKBREGISTRY],[xkbregistry])
 
 PKG_CHECK_VAR([XKBCOMMON_LIBDIR],[xkbcommon],[libdir])
+PKG_CHECK_VAR([XKBREGISTRY_LIBDIR],[xkbregistry],[libdir])
 AC_SUBST([XKBCOMMON_LIBDIR])
+AC_SUBST([XKBREGISTRY_LIBDIR])
 GUILE_MODULE_REQUIRED([bytestructures guile])
 GUILE_MODULE_REQUIRED([bytestructure-class])
 

@@ -25,10 +25,40 @@
 (define %srcdir
   (dirname (current-filename)))
 
+(define-public guile-bytestructure-class
+  (package
+    (name "guile-bytestructure-class")
+    (version "0.2.0")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://github.com/Z572/guile-bytestructure-class")
+                    (commit (string-append "v" version))))
+              (file-name (git-file-name name version))
+              (sha256
+               (base32
+                "0y3sryy79arp3f5smyxn8w7zra3j4bb0qdpl1p0bld3jicc4s86a"))))
+    (build-system gnu-build-system)
+    (arguments
+     (list #:make-flags #~'("GUILE_AUTO_COMPILE=0")))
+    (native-inputs
+     (list autoconf
+           automake
+           pkg-config
+           guile-3.0-latest))
+    (inputs (list guile-3.0-latest))
+    (propagated-inputs (list guile-bytestructures))
+    (synopsis "bytestructure and goops")
+    (description "This package combines bytestructure with goops,
+and provide 4 new bytestructure-descriptor:
+bs:unknow, cstring-pointer*, bs:enum, stdbool.")
+    (home-page "https://github.com/Z572/guile-bytestructure-class")
+    (license license:gpl3+)))
+
 (define-public guile-xkbcommon
   (package
     (name "guile-xkbcommon")
-    (version "0.1")
+    (version "0.0.1")
     (source (local-file "." "guile-xkbcommon-checkout"
                         #:recursive? #t
                         #:select? (git-predicate %srcdir)))
@@ -45,9 +75,7 @@
                   libxml2))
     (propagated-inputs
      (list
-      (primitive-load
-       (string-append (dirname (dirname (current-filename)))
-                      "/guile-bytestructure-class/guix.scm"))
+      guile-bytestructure-class
       guile-bytestructures))
     (synopsis "")
     (description "")

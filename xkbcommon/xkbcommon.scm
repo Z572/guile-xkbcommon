@@ -1,28 +1,34 @@
-(define-module
-  (xkbcommon xkbcommon)
-  #:use-module
-  (bytestructure-class)
-  #:use-module
-  ((system foreign) #:prefix ffi:)
-  #:use-module
-  (bytestructures guile)
-  #:use-module
-  (oop goops)
-  #:use-module
-  (xkbcommon config))
+(define-module (xkbcommon xkbcommon)
+  #:use-module (srfi srfi-26)
+  #:use-module (bytestructure-class)
+  #:use-module ((system foreign) #:prefix ffi:)
+  #:use-module (bytestructures guile)
+  #:use-module (oop goops)
+  #:use-module (xkbcommon config))
+
 (define (pointer->string* ptr)
   (if (ffi:null-pointer? ptr)
-    #f
-    (ffi:pointer->string ptr)))
-(begin
-  (define-public %xkb-context-struct (bs:unknow))
-  (define-bytestructure-class
-    <xkb-context>
-    ()
-    %xkb-context-struct
-    wrap-xkb-context
-    unwrap-xkb-context
-    xkb-context?))
+      #f
+      (ffi:pointer->string ptr)))
+(define-inlinable (not-zero? n)
+  (not (zero? n)))
+
+(define-public %xkb-context-struct (bs:unknow))
+(define-bytestructure-class <xkb-context> ()
+  %xkb-context-struct
+  wrap-xkb-context
+  unwrap-xkb-context
+  xkb-context?
+  (include-paths
+   #:allocation
+   #:virtual
+   #:slot-ref
+   (lambda (x)
+     (map (cut xkb-context-include-path-get x <>)
+          (iota
+           (xkb-context-num-include-paths x)) ))
+   #:slot-set! (const #f)))
+
 (begin
   (define-public %xkb-keymap-struct (bs:unknow))
   (define-bytestructure-class
@@ -152,47 +158,35 @@
                    (force %libxkbcommon))
                  (list ffi:uint32))))
     (lambda (ks) (%func ks))))
-(begin
-  (define-public %xkb-context-flags-enum
-    (bs:enum
-      '((XKB_CONTEXT_NO_FLAGS 0)
-        (XKB_CONTEXT_NO_DEFAULT_INCLUDES 1)
-        (XKB_CONTEXT_NO_ENVIRONMENT_NAMES 2))))
-  (define-public XKB_CONTEXT_NO_FLAGS 0)
-  (define-public XKB_CONTEXT_NO_DEFAULT_INCLUDES 1)
-  (define-public XKB_CONTEXT_NO_ENVIRONMENT_NAMES
-    2)
-  (define-public (%xkb-context-flags-enum->number o)
-    (bs:enum->integer %xkb-context-flags-enum o)))
+
+
+;; context
+
+(define-public %xkb-context-flags-enum
+  (bs:enum
+   '((XKB_CONTEXT_NO_FLAGS 0)
+     (XKB_CONTEXT_NO_DEFAULT_INCLUDES 1)
+     (XKB_CONTEXT_NO_ENVIRONMENT_NAMES 2))))
+(define-public XKB_CONTEXT_NO_FLAGS 0)
+(define-public XKB_CONTEXT_NO_DEFAULT_INCLUDES 1)
+(define-public XKB_CONTEXT_NO_ENVIRONMENT_NAMES 2)
+(define-public (%xkb-context-flags-enum->number o)
+  (bs:enum->integer %xkb-context-flags-enum o))
 (define-public xkb-context-new
   (let ((%func (ffi:pointer->procedure
-                 '*
-                 (dynamic-func
-                   "xkb_context_new"
-                   (force %libxkbcommon))
-                 (list ffi:int))))
-    (lambda (flags)
-      (wrap-xkb-context
-        (%func (%xkb-context-flags-enum->number flags))))))
-(define-public xkb-context-ref
-  (let ((%func (ffi:pointer->procedure
-                 '*
-                 (dynamic-func
-                   "xkb_context_ref"
-                   (force %libxkbcommon))
-                 (list '*))))
-    (lambda (context)
-      (wrap-xkb-context
-        (%func (unwrap-xkb-context context))))))
-(define-public xkb-context-unref
-  (let ((%func (ffi:pointer->procedure
-                 ffi:void
-                 (dynamic-func
-                   "xkb_context_unref"
-                   (force %libxkbcommon))
-                 (list '*))))
-    (lambda (context)
-      (%func (unwrap-xkb-context context)))))
+                '*
+                (dynamic-func
+                 "xkb_context_new"
+                 (force %libxkbcommon))
+                (list ffi:int)))
+        (finalizer (dynamic-func
+                    "xkb_context_unref"
+                    (force %libxkbcommon))))
+    (lambda* (#:optional (flags XKB_CONTEXT_NO_FLAGS))
+      (let ((p (%func (%xkb-context-flags-enum->number flags))))
+        (ffi:set-pointer-finalizer! p finalizer)
+        (wrap-xkb-context p)))))
+
 (define-public xkb-context-set-user-data
   (let ((%func (ffi:pointer->procedure
                  ffi:void

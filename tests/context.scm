@@ -69,4 +69,14 @@
             (xkb-keymap-key-for-each
              (xkb-keymap-new-from-names (xkb-context-new))
              30))
+(let ((keymap (xkb-keymap-new-from-names (xkb-context-new))))
+  (test-assert "xkb-keymap-key-get-name"
+    (xkb-keymap-key-get-name keymap (xkb-keymap-min-keycode keymap)))
+  (test-error "xkb-keymap-key-get-name: fail"
+              #t
+              (xkb-keymap-key-get-name #f (xkb-keymap-min-keycode keymap)))
+  (test-equal "xkb-keymap-key-get-name: no exists"
+    #f
+    (xkb-keymap-key-get-name keymap (- (xkb-keymap-min-keycode keymap) 1))))
+
 (test-end "context")

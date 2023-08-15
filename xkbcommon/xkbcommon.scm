@@ -389,21 +389,23 @@
               (%xkb-keymap-format-enum->number format))))))
 (define-public xkb-keymap-min-keycode
   (let ((%func (ffi:pointer->procedure
-                 ffi:uint32
-                 (dynamic-func
-                   "xkb_keymap_min_keycode"
-                   (force %libxkbcommon))
-                 (list '*))))
+                ffi:uint32
+                (dynamic-func
+                 "xkb_keymap_min_keycode"
+                 (force %libxkbcommon))
+                (list '*))))
     (lambda (keymap)
+      (assert (xkb-keymap? keymap))
       (%func (unwrap-xkb-keymap keymap)))))
 (define-public xkb-keymap-max-keycode
   (let ((%func (ffi:pointer->procedure
-                 ffi:uint32
-                 (dynamic-func
-                   "xkb_keymap_max_keycode"
-                   (force %libxkbcommon))
-                 (list '*))))
+                ffi:uint32
+                (dynamic-func
+                 "xkb_keymap_max_keycode"
+                 (force %libxkbcommon))
+                (list '*))))
     (lambda (keymap)
+      (assert (xkb-keymap? keymap))
       (%func (unwrap-xkb-keymap keymap)))))
 (define-public xkb_keymap_key_iter_t
   (bs:pointer '*))

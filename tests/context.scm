@@ -41,4 +41,14 @@
   #f
   (xkb-keymap-new-from-string (xkb-context-new) "sdfd"))
 
+(test-assert "xkb-keymap-min-keycode"
+  (xkb-keymap-min-keycode (xkb-keymap-new-from-names (xkb-context-new))))
+(test-error "xkb-keymap-min-keycode: fail"
+            #t
+            (xkb-keymap-min-keycode #f))
+(test-assert "xkb-keymap-max-keycode"
+  (xkb-keymap-max-keycode (xkb-keymap-new-from-names (xkb-context-new))))
+(test-error "xkb-keymap-max-keycode: fail"
+            #t
+            (xkb-keymap-max-keycode #f))
 (test-end "context")

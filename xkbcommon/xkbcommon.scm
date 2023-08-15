@@ -332,68 +332,48 @@
       o)))
 (define-public xkb-keymap-new-from-names
   (let ((%func (ffi:pointer->procedure
-                 '*
-                 (dynamic-func
-                   "xkb_keymap_new_from_names"
-                   (force %libxkbcommon))
-                 (list '* '* ffi:int))))
-    (lambda (context names flags)
-      (wrap-xkb-keymap
-        (%func (unwrap-xkb-context context)
-               (unwrap-xkb-rule-names names)
-               (%xkb-keymap-compile-flags-enum->number flags))))))
+                '*
+                (dynamic-func
+                 "xkb_keymap_new_from_names"
+                 (force %libxkbcommon))
+                (list '* '* ffi:int)))
+        (finalizer (dynamic-func
+                    "xkb_keymap_unref"
+                    (force %libxkbcommon))))
+    (lambda* (context #:optional names (flags XKB_KEYMAP_COMPILE_NO_FLAGS))
+      (let ((p (%func (unwrap-xkb-context context)
+                      (unwrap-xkb-rule-names names)
+                      (%xkb-keymap-compile-flags-enum->number flags))))
+        (ffi:set-pointer-finalizer! p finalizer)
+        (wrap-xkb-keymap p)))))
 (begin
   (define-public %xkb-keymap-format-enum
     (bs:enum '((XKB_KEYMAP_FORMAT_TEXT_V1 1))))
   (define-public XKB_KEYMAP_FORMAT_TEXT_V1 1)
   (define-public (%xkb-keymap-format-enum->number o)
     (bs:enum->integer %xkb-keymap-format-enum o)))
+
 (define-public xkb-keymap-new-from-string
   (let ((%func (ffi:pointer->procedure
-                 '*
-                 (dynamic-func
-                   "xkb_keymap_new_from_string"
-                   (force %libxkbcommon))
-                 (list '* '* ffi:int ffi:int))))
-    (lambda (context string format flags)
-      (wrap-xkb-keymap
-        (%func (unwrap-xkb-context context)
-               (ffi:string->pointer string)
-               (%xkb-keymap-format-enum->number format)
-               (%xkb-keymap-compile-flags-enum->number flags))))))
-(define-public xkb-keymap-new-from-buffer
-  (let ((%func (ffi:pointer->procedure
-                 '*
-                 (dynamic-func
-                   "xkb_keymap_new_from_buffer"
-                   (force %libxkbcommon))
-                 (list '* '* ffi:size_t ffi:int ffi:int))))
-    (lambda (context buffer length format flags)
-      (wrap-xkb-keymap
-        (%func (unwrap-xkb-context context)
-               (ffi:string->pointer buffer)
-               length
-               (%xkb-keymap-format-enum->number format)
-               (%xkb-keymap-compile-flags-enum->number flags))))))
-(define-public xkb-keymap-ref
-  (let ((%func (ffi:pointer->procedure
-                 '*
-                 (dynamic-func
-                   "xkb_keymap_ref"
-                   (force %libxkbcommon))
-                 (list '*))))
-    (lambda (keymap)
-      (wrap-xkb-keymap
-        (%func (unwrap-xkb-keymap keymap))))))
-(define-public xkb-keymap-unref
-  (let ((%func (ffi:pointer->procedure
-                 ffi:void
-                 (dynamic-func
-                   "xkb_keymap_unref"
-                   (force %libxkbcommon))
-                 (list '*))))
-    (lambda (keymap)
-      (%func (unwrap-xkb-keymap keymap)))))
+                '*
+                (dynamic-func
+                 "xkb_keymap_new_from_string"
+                 (force %libxkbcommon))
+                (list '* '* ffi:int ffi:int)))
+        (finalizer (dynamic-func
+                    "xkb_keymap_unref"
+                    (force %libxkbcommon))))
+    (lambda* (context string
+                      #:optional
+                      (format XKB_KEYMAP_FORMAT_TEXT_V1)
+                      (flags XKB_KEYMAP_COMPILE_NO_FLAGS))
+      (let ((p (%func (unwrap-xkb-context context)
+                      (ffi:string->pointer string)
+                      (%xkb-keymap-format-enum->number format)
+                      (%xkb-keymap-compile-flags-enum->number flags))))
+        (ffi:set-pointer-finalizer! p finalizer)
+        (wrap-xkb-keymap p)))))
+
 (define-public xkb-keymap-get-as-string
   (let ((%func (ffi:pointer->procedure
                  '*

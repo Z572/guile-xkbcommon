@@ -21,4 +21,15 @@
                      XKB_CONTEXT_NO_DEFAULT_INCLUDES)))
     (xkb-context-include-path-reset-defaults no-default)
     (xkb-context-include-path-get no-default 0)))
+(test-assert "xkb-keymap-new-from-names"
+  (xkb-keymap? (xkb-keymap-new-from-names (xkb-context-new))))
+(test-assert "xkb-keymap-get-as-string"
+  (xkb-keymap-get-as-string
+   (xkb-keymap-new-from-names (xkb-context-new))
+   XKB_KEYMAP_FORMAT_TEXT_V1))
+(test-assert "xkb-keymap-new-from-string"
+  (let ((str (xkb-keymap-get-as-string
+              (xkb-keymap-new-from-names (xkb-context-new))
+              XKB_KEYMAP_FORMAT_TEXT_V1)))
+    (xkb-keymap-new-from-string (xkb-context-new) str)))
 (test-end "context")

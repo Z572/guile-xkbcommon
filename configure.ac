@@ -5,6 +5,7 @@ AC_PREREQ([2.69])
 AC_INIT([guile-xkbcommon], [0.0.1], [873216071@qq.com])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([build-aux])
+AC_REQUIRE_AUX_FILE([test-driver.scm])
 AM_INIT_AUTOMAKE([1.14 gnu tar-ustar silent-rules subdir-objects \
  color-tests parallel-tests -Woverride -Wno-portability])
 

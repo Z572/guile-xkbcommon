@@ -1,13 +1,18 @@
 GOBJECTS = $(SOURCES:%.scm=%.go) $(NODIST_SOURCES:%.scm=%.go)
 
-nobase_mod_DATA = $(SOURCES) $(NOCOMP_SOURCES) $(NODIST_SOURCES)
+nobase_mod_DATA = $(SOURCES) $(NODIST_SOURCES)
 nobase_go_DATA = $(GOBJECTS)
 
 guile_install_go_files = install-nobase_goDATA
 $(guile_install_go_files): install-nobase_modDATA
 
+TESTS = tests/context.scm
+AM_TESTS_ENVIRONMENT = abs_top_srcdir="$(abs_top_srcdir)"
+TEST_EXTENSIONS = .scm
+SCM_LOG_DRIVER = $(top_builddir)/pre-inst-env $(GUILE) --no-auto-compile \
+   $(top_srcdir)/build-aux/test-driver.scm --coverage=yes
 CLEANFILES = $(GOBJECTS)
-EXTRA_DIST = $(SOURCES) $(NOCOMP_SOURCES)
+EXTRA_DIST = $(SOURCES) $(TESTS)
 GUILE_WARNINGS =                                          \
   -Wunbound-variable -Warity-mismatch -Wshadowed-toplevel \
   -Wmacro-use-before-definition                           \

@@ -407,17 +407,23 @@
     (lambda (keymap)
       (assert (xkb-keymap? keymap))
       (%func (unwrap-xkb-keymap keymap)))))
-(define-public xkb_keymap_key_iter_t
-  (bs:pointer '*))
+
 (define-public xkb-keymap-key-for-each
   (let ((%func (ffi:pointer->procedure
-                 ffi:void
-                 (dynamic-func
-                   "xkb_keymap_key_for_each"
-                   (force %libxkbcommon))
-                 (list '* '* '*))))
-    (lambda (keymap iter data)
-      (%func (unwrap-xkb-keymap keymap) iter data))))
+                ffi:void
+                (dynamic-func
+                 "xkb_keymap_key_for_each"
+                 (force %libxkbcommon))
+                (list '* '* '*))))
+    (lambda (keymap proc)
+      (assert (xkb-keymap? keymap))
+      (assert (procedure? proc))
+
+      (define (iter keymap key data)
+        (proc (wrap-xkb-keymap keymap) key))
+      (%func (unwrap-xkb-keymap keymap)
+             (ffi:procedure->pointer ffi:void iter `(* ,ffi:uint32 *))
+             ffi:%null-pointer))))
 (define-public xkb-keymap-key-get-name
   (let ((%func (ffi:pointer->procedure
                  '*

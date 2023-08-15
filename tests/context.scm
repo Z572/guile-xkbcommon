@@ -51,4 +51,22 @@
 (test-error "xkb-keymap-max-keycode: fail"
             #t
             (xkb-keymap-max-keycode #f))
+(let ((keymap (xkb-keymap-new-from-names (xkb-context-new))))
+  (test-equal "xkb-keymap-key-for-each"
+    (+ (- (xkb-keymap-max-keycode keymap)
+          (xkb-keymap-min-keycode keymap))
+       1)
+
+    (let ((n 0))
+      (xkb-keymap-key-for-each
+       keymap
+       (lambda (km k)
+         (set! n (1+ n))))
+      n)))
+
+(test-error "xkb-keymap-key-for-each: fail"
+            #t
+            (xkb-keymap-key-for-each
+             (xkb-keymap-new-from-names (xkb-context-new))
+             30))
 (test-end "context")

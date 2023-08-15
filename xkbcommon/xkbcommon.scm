@@ -14,6 +14,7 @@
 (define-inlinable (not-zero? n)
   (not (zero? n)))
 
+(define XKB_KEYCODE_INVALID #xffffffff)
 (define-public %xkb-context-struct (bs:unknow))
 (define-bytestructure-class <xkb-context> ()
   %xkb-context-struct
@@ -443,8 +444,11 @@
                  (force %libxkbcommon))
                 (list '* '*))))
     (lambda (keymap name)
-      (%func (unwrap-xkb-keymap keymap)
-             (ffi:string->pointer name)))))
+      (let ((o (%func (unwrap-xkb-keymap keymap)
+                      (ffi:string->pointer name))))
+        (if (= o XKB_KEYCODE_INVALID)
+            (throw 'xkb-keycode-invalid "~a is invalib!" name)
+            o)))))
 (define-public xkb-keymap-num-mods
   (let ((%func (ffi:pointer->procedure
                  ffi:uint32

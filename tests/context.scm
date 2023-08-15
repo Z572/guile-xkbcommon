@@ -79,4 +79,18 @@
     #f
     (xkb-keymap-key-get-name keymap (- (xkb-keymap-min-keycode keymap) 1))))
 
+(let* ((keymap (xkb-keymap-new-from-names (xkb-context-new)))
+       (minkeycode (xkb-keymap-min-keycode keymap)))
+  (test-equal "xkb-keymap-key-by-name"
+    minkeycode
+    (xkb-keymap-key-by-name keymap
+                            (xkb-keymap-key-get-name
+                             keymap minkeycode)))
+  (test-error "xkb-keymap-key-by-name: fail"
+              #t
+              (xkb-keymap-key-by-name #f (xkb-keymap-min-keycode keymap)))
+  (test-error "xkb-keymap-key-by-name: no exists"
+              #t
+              (xkb-keymap-key-by-name keymap "Ndfsdlfjafkd ")))
+
 (test-end "context")

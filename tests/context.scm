@@ -27,6 +27,11 @@
   (xkb-keymap-get-as-string
    (xkb-keymap-new-from-names (xkb-context-new))
    XKB_KEYMAP_FORMAT_TEXT_V1))
+(test-error "xkb-keymap-get-as-string: error"
+            #t
+            (xkb-keymap-get-as-string
+             #f XKB_KEYMAP_FORMAT_TEXT_V1))
+
 (test-assert "xkb-keymap-new-from-string"
   (let ((str (xkb-keymap-get-as-string
               (xkb-keymap-new-from-names (xkb-context-new))

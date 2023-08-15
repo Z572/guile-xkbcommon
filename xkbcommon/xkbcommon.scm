@@ -1,4 +1,5 @@
 (define-module (xkbcommon xkbcommon)
+  #:use-module ((rnrs base) #:select (assert))
   #:use-module (srfi srfi-26)
   #:use-module (bytestructure-class)
   #:use-module ((system foreign) #:prefix ffi:)
@@ -376,15 +377,16 @@
 
 (define-public xkb-keymap-get-as-string
   (let ((%func (ffi:pointer->procedure
-                 '*
-                 (dynamic-func
-                   "xkb_keymap_get_as_string"
-                   (force %libxkbcommon))
-                 (list '* ffi:int))))
+                '*
+                (dynamic-func
+                 "xkb_keymap_get_as_string"
+                 (force %libxkbcommon))
+                (list '* ffi:int))))
     (lambda (keymap format)
+      (assert (xkb-keymap? keymap))
       (pointer->string*
-        (%func (unwrap-xkb-keymap keymap)
-               (%xkb-keymap-format-enum->number format))))))
+       (%func (unwrap-xkb-keymap keymap)
+              (%xkb-keymap-format-enum->number format))))))
 (define-public xkb-keymap-min-keycode
   (let ((%func (ffi:pointer->procedure
                  ffi:uint32

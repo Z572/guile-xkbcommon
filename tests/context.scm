@@ -37,4 +37,8 @@
               (xkb-keymap-new-from-names (xkb-context-new))
               XKB_KEYMAP_FORMAT_TEXT_V1)))
     (xkb-keymap-new-from-string (xkb-context-new) str)))
+(test-equal "xkb-keymap-new-from-string: fail"
+  #f
+  (xkb-keymap-new-from-string (xkb-context-new) "sdfd"))
+
 (test-end "context")

@@ -93,4 +93,7 @@
               #t
               (xkb-keymap-key-by-name keymap "Ndfsdlfjafkd ")))
 
+(test-assert "xkb-keymap-num-mods"
+  (xkb-keymap-num-mods (xkb-keymap-new-from-names (xkb-context-new))))
+
 (test-end "context")

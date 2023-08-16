@@ -480,6 +480,8 @@
                  (force %libxkbcommon))
                 (list '* '*))))
     (lambda (keymap name)
+      (assert (xkb-keymap? keymap))
+      (assert (string? name))
       (%func (unwrap-xkb-keymap keymap)
              (ffi:string->pointer name)))))
 (define-public xkb-keymap-num-layouts

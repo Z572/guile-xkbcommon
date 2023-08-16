@@ -459,23 +459,26 @@
     (lambda (keymap)
       (assert (xkb-keymap? keymap))
       (%func (unwrap-xkb-keymap keymap)))))
+
 (define-public xkb-keymap-mod-get-name
   (let ((%func (ffi:pointer->procedure
-                 '*
-                 (dynamic-func
-                   "xkb_keymap_mod_get_name"
-                   (force %libxkbcommon))
-                 (list '* ffi:uint32))))
+                '*
+                (dynamic-func
+                 "xkb_keymap_mod_get_name"
+                 (force %libxkbcommon))
+                (list '* ffi:uint32))))
     (lambda (keymap idx)
+      (assert (xkb-keymap? keymap))
       (pointer->string*
-        (%func (unwrap-xkb-keymap keymap) idx)))))
+       (%func (unwrap-xkb-keymap keymap) idx)))))
+
 (define-public xkb-keymap-mod-get-index
   (let ((%func (ffi:pointer->procedure
-                 ffi:uint32
-                 (dynamic-func
-                   "xkb_keymap_mod_get_index"
-                   (force %libxkbcommon))
-                 (list '* '*))))
+                ffi:uint32
+                (dynamic-func
+                 "xkb_keymap_mod_get_index"
+                 (force %libxkbcommon))
+                (list '* '*))))
     (lambda (keymap name)
       (%func (unwrap-xkb-keymap keymap)
              (ffi:string->pointer name)))))

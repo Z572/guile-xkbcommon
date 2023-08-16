@@ -96,4 +96,9 @@
 (test-assert "xkb-keymap-num-mods"
   (xkb-keymap-num-mods (xkb-keymap-new-from-names (xkb-context-new))))
 
+(test-assert "xkb-keymap-mod-get-name"
+  (let ((keymap (xkb-keymap-new-from-names (xkb-context-new))))
+    (xkb-keymap-mod-get-name
+     keymap (- (xkb-keymap-num-mods keymap) 1))))
+
 (test-end "context")

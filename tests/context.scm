@@ -111,7 +111,12 @@
   (test-assert "xkb-keymap-num-layouts"
     (xkb-keymap-num-layouts keymap))
   (test-assert "xkb-keymap-layout-get-name"
-    (xkb-keymap-layout-get-name keymap (- (xkb-keymap-num-layouts keymap) 1))))
+    (xkb-keymap-layout-get-name keymap (- (xkb-keymap-num-layouts keymap) 1)))
+  (test-equal "xkb-keymap-layout-get-index"
+    (- (xkb-keymap-num-layouts keymap) 1)
+    (xkb-keymap-layout-get-index
+     keymap (xkb-keymap-layout-get-name
+             keymap (- (xkb-keymap-num-layouts keymap) 1)))))
 
 
 

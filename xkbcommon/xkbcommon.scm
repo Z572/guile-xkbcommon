@@ -507,12 +507,13 @@
        (%func (unwrap-xkb-keymap keymap) idx)))))
 (define-public xkb-keymap-layout-get-index
   (let ((%func (ffi:pointer->procedure
-                 ffi:uint32
-                 (dynamic-func
-                   "xkb_keymap_layout_get_index"
-                   (force %libxkbcommon))
-                 (list '* '*))))
+                ffi:uint32
+                (dynamic-func
+                 "xkb_keymap_layout_get_index"
+                 (force %libxkbcommon))
+                (list '* '*))))
     (lambda (keymap name)
+      (assert (xkb-keymap? keymap))
       (%func (unwrap-xkb-keymap keymap)
              (ffi:string->pointer name)))))
 (define-public xkb-keymap-num-leds

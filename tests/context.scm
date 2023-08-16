@@ -107,5 +107,9 @@
     (xkb-keymap-mod-get-index
      keymap (xkb-keymap-mod-get-name
              keymap (- (xkb-keymap-num-mods keymap) 1)))))
+(let ((keymap (xkb-keymap-new-from-names (xkb-context-new))))
+  (test-assert "xkb-keymap-num-layouts"
+    (xkb-keymap-num-layouts keymap)))
+
 
 (test-end "context")

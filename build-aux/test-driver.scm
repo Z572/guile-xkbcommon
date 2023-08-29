@@ -1,6 +1,6 @@
 ;;;; test-driver.scm - Guile test driver for Automake testsuite harness
 
-(define script-version "2018-03-25.05") ;UTC
+(define script-version "2023-08-29.15") ;UTC
 
 ;;; Copyright © 2015-2023 Free Software Foundation, Inc.
 ;;;
@@ -96,13 +96,13 @@ The '--test-name', '--log-file' and '--trs-file' options are mandatory.\n"))
   (let ((result (string-upcase (symbol->string symbol))))
     (if colorize?
         (string-append (case symbol
-                         ((pass)       "[0;32m")  ;green
-                         ((xfail)      "[1;32m")  ;light green
-                         ((skip)       "[1;34m")  ;blue
-                         ((fail xpass) "[0;31m")  ;red
-                         ((error)      "[0;35m")) ;magenta
+                         ((pass)       "[0;32m")  ;green
+                         ((xfail)      "[1;32m")  ;light green
+                         ((skip)       "[1;34m")  ;blue
+                         ((fail xpass) "[0;31m")  ;red
+                         ((error)      "[0;35m")) ;magenta
                        result
-                       "[m")          ;no color
+                       "[m")          ;no color
         result)))
 
 (define* (test-runner-gnu test-name #:key color? brief? out-port trs-port)

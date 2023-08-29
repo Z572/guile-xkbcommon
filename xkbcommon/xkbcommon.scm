@@ -11,6 +11,10 @@
   (if (ffi:null-pointer? ptr)
       #f
       (ffi:pointer->string ptr)))
+(define-inlinable (string->pointer* str)
+  (if str
+      (ffi:string->pointer str)
+      ffi:%null-pointer))
 (define-inlinable (not-zero? n)
   (not (zero? n)))
 
@@ -58,46 +62,38 @@
 (define-public xkb_mod_mask_t uint32)
 (define-public xkb_led_index_t uint32)
 (define-public xkb_led_mask_t uint32)
-(begin
-  (define-public %xkb-rule-names-struct
-    (bs:struct
-      `((rules ,cstring-pointer*)
-        (model ,cstring-pointer*)
-        (layout ,cstring-pointer*)
-        (variant ,cstring-pointer*)
-        (options ,cstring-pointer*))))
-  (define-bytestructure-class
-    <xkb-rule-names>
-    ()
-    %xkb-rule-names-struct
-    wrap-xkb-rule-names
-    unwrap-xkb-rule-names
-    xkb-rule-names?
-    (rules #:init-keyword #:rules #:accessor .rules)
-    (model #:init-keyword #:model #:accessor .model)
-    (layout
-      #:init-keyword
-      #:layout
-      #:accessor
-      .layout)
-    (variant
-      #:init-keyword
-      #:variant
-      #:accessor
-      .variant)
-    (options
-      #:init-keyword
-      #:options
-      #:accessor
-      .options))
-  (export .rules .model .layout .variant .options))
+
+(define-class <xkb-rule-names> ()
+  (rules #:init-value #f #:init-keyword #:rules #:accessor .rules)
+  (model #:init-value #f #:init-keyword #:model #:accessor .model)
+  (layout #:init-value #f #:init-keyword #:layout #:accessor .layout)
+  (variant #:init-value #f #:init-keyword #:variant #:accessor .variant)
+  (options #:init-value #f #:init-keyword #:options #:accessor .options))
+
+(define (xkb-rule-names? obj)
+  (is-a? obj <xkb-rule-names>))
+
+(define (xkb-rule-names->pointer x)
+  (ffi:make-c-struct
+   '(* * * * *)
+   (list (string->pointer* (.rules x))
+         (string->pointer* (.model x))
+         (string->pointer* (.layout x))
+         (string->pointer* (.variant x))
+         (string->pointer* (.options x)))))
+
+(export <xkb-rule-names>
+        xkb-rule-names?
+        xkb-rule-names->pointer
+        .rules .model .layout .variant .options)
+
 (define-public xkb-keysym-get-name
   (let ((%func (ffi:pointer->procedure
-                 ffi:int
-                 (dynamic-func
-                   "xkb_keysym_get_name"
-                   (force %libxkbcommon))
-                 (list ffi:uint32 '* ffi:size_t))))
+                ffi:int
+                (dynamic-func
+                 "xkb_keysym_get_name"
+                 (force %libxkbcommon))
+                (list ffi:uint32 '* ffi:size_t))))
     (lambda (keysym buffer size)
       (%func keysym (ffi:string->pointer buffer) size))))
 (begin
@@ -317,22 +313,28 @@
       (%func (unwrap-xkb-context context)))))
 (define-public xkb-context-set-log-fn
   (let ((%func (ffi:pointer->procedure
-                 ffi:void
-                 (dynamic-func
-                   "xkb_context_set_log_fn"
-                   (force %libxkbcommon))
-                 (list '* '*))))
+                ffi:void
+                (dynamic-func
+                 "xkb_context_set_log_fn"
+                 (force %libxkbcommon))
+                (list '* '*))))
     (lambda (context log_fn)
       (%func (unwrap-xkb-context context) log_fn))))
+
+(define-public %xkb-keymap-compile-flags-enum
+  (bs:enum '((XKB_KEYMAP_COMPILE_NO_FLAGS 0))))
+(define-public XKB_KEYMAP_COMPILE_NO_FLAGS 0)
+(define-public (%xkb-keymap-compile-flags-enum->number o)
+  (bs:enum->integer %xkb-keymap-compile-flags-enum o))
+
 (begin
-  (define-public %xkb-keymap-compile-flags-enum
-    (bs:enum '((XKB_KEYMAP_COMPILE_NO_FLAGS 0))))
-  (define-public XKB_KEYMAP_COMPILE_NO_FLAGS 0)
-  (define-public (%xkb-keymap-compile-flags-enum->number o)
-    (bs:enum->integer
-      %xkb-keymap-compile-flags-enum
-      o)))
-(define-public xkb-keymap-new-from-names
+  (define-public %xkb-keymap-format-enum
+    (bs:enum '((XKB_KEYMAP_FORMAT_TEXT_V1 1))))
+  (define-public XKB_KEYMAP_FORMAT_TEXT_V1 1)
+  (define-public (%xkb-keymap-format-enum->number o)
+    (bs:enum->integer %xkb-keymap-format-enum o)))
+
+(define-public xkb-keymap-new
   (let ((%func (ffi:pointer->procedure
                 '*
                 (dynamic-func
@@ -341,40 +343,34 @@
                 (list '* '* ffi:int)))
         (finalizer (dynamic-func
                     "xkb_keymap_unref"
-                    (force %libxkbcommon))))
-    (lambda* (context #:optional names (flags XKB_KEYMAP_COMPILE_NO_FLAGS))
-      (let ((p (%func (unwrap-xkb-context context)
-                      (unwrap-xkb-rule-names names)
-                      (%xkb-keymap-compile-flags-enum->number flags))))
+                    (force %libxkbcommon)))
+        (%from-string (ffi:pointer->procedure
+                       '*
+                       (dynamic-func
+                        "xkb_keymap_new_from_string"
+                        (force %libxkbcommon))
+                       (list '* '* ffi:int ffi:int))))
+    (lambda* (context
+              #:optional (names-or-string (make <xkb-rule-names>))
+              #:key
+              (format XKB_KEYMAP_FORMAT_TEXT_V1)
+              (flags XKB_KEYMAP_COMPILE_NO_FLAGS))
+      (assert (xkb-context? context))
+      (assert (or (xkb-rule-names? names-or-string)
+                  (string? names-or-string)))
+      (define is-string (string? names-or-string))
+      (let ((p (apply (if is-string %from-string %func)
+                      (unwrap-xkb-context context)
+                      (if (string? names-or-string)
+                          (ffi:string->pointer names-or-string)
+                          (xkb-rule-names->pointer names-or-string))
+                      (append (if is-string
+                                  (list (%xkb-keymap-format-enum->number format))
+                                  '())
+                              (list (%xkb-keymap-compile-flags-enum->number flags))))))
         (ffi:set-pointer-finalizer! p finalizer)
         (wrap-xkb-keymap p)))))
-(begin
-  (define-public %xkb-keymap-format-enum
-    (bs:enum '((XKB_KEYMAP_FORMAT_TEXT_V1 1))))
-  (define-public XKB_KEYMAP_FORMAT_TEXT_V1 1)
-  (define-public (%xkb-keymap-format-enum->number o)
-    (bs:enum->integer %xkb-keymap-format-enum o)))
 
-(define-public xkb-keymap-new-from-string
-  (let ((%func (ffi:pointer->procedure
-                '*
-                (dynamic-func
-                 "xkb_keymap_new_from_string"
-                 (force %libxkbcommon))
-                (list '* '* ffi:int ffi:int)))
-        (finalizer (dynamic-func
-                    "xkb_keymap_unref"
-                    (force %libxkbcommon))))
-    (lambda* (context string
-                      #:optional
-                      (format XKB_KEYMAP_FORMAT_TEXT_V1)
-                      (flags XKB_KEYMAP_COMPILE_NO_FLAGS))
-      (let ((p (%func (unwrap-xkb-context context)
-                      (ffi:string->pointer string)
-                      (%xkb-keymap-format-enum->number format)
-                      (%xkb-keymap-compile-flags-enum->number flags))))
-        (ffi:set-pointer-finalizer! p finalizer)
-        (wrap-xkb-keymap p)))))
 
 (define-public xkb-keymap-get-as-string
   (let ((%func (ffi:pointer->procedure

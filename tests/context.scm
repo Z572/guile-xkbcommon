@@ -21,37 +21,37 @@
                      XKB_CONTEXT_NO_DEFAULT_INCLUDES)))
     (xkb-context-include-path-reset-defaults no-default)
     (xkb-context-include-path-get no-default 0)))
-(test-assert "xkb-keymap-new-from-names"
-  (xkb-keymap? (xkb-keymap-new-from-names (xkb-context-new))))
+(test-assert "xkb-keymap-new"
+  (xkb-keymap? (xkb-keymap-new (xkb-context-new))))
 (test-assert "xkb-keymap-get-as-string"
   (xkb-keymap-get-as-string
-   (xkb-keymap-new-from-names (xkb-context-new))
+   (xkb-keymap-new (xkb-context-new))
    XKB_KEYMAP_FORMAT_TEXT_V1))
 (test-error "xkb-keymap-get-as-string: error"
             #t
             (xkb-keymap-get-as-string
              #f XKB_KEYMAP_FORMAT_TEXT_V1))
 
-(test-assert "xkb-keymap-new-from-string"
+(test-assert "xkb-keymap-new: string"
   (let ((str (xkb-keymap-get-as-string
-              (xkb-keymap-new-from-names (xkb-context-new))
+              (xkb-keymap-new (xkb-context-new))
               XKB_KEYMAP_FORMAT_TEXT_V1)))
-    (xkb-keymap-new-from-string (xkb-context-new) str)))
-(test-equal "xkb-keymap-new-from-string: fail"
+    (xkb-keymap? (xkb-keymap-new (xkb-context-new) str))))
+(test-equal "xkb-keymap-new: string: fail"
   #f
-  (xkb-keymap-new-from-string (xkb-context-new) "sdfd"))
+  (xkb-keymap-new (xkb-context-new) "sdfd"))
 
 (test-assert "xkb-keymap-min-keycode"
-  (xkb-keymap-min-keycode (xkb-keymap-new-from-names (xkb-context-new))))
+  (xkb-keymap-min-keycode (xkb-keymap-new (xkb-context-new))))
 (test-error "xkb-keymap-min-keycode: fail"
             #t
             (xkb-keymap-min-keycode #f))
 (test-assert "xkb-keymap-max-keycode"
-  (xkb-keymap-max-keycode (xkb-keymap-new-from-names (xkb-context-new))))
+  (xkb-keymap-max-keycode (xkb-keymap-new (xkb-context-new))))
 (test-error "xkb-keymap-max-keycode: fail"
             #t
             (xkb-keymap-max-keycode #f))
-(let ((keymap (xkb-keymap-new-from-names (xkb-context-new))))
+(let ((keymap (xkb-keymap-new (xkb-context-new))))
   (test-equal "xkb-keymap-key-for-each"
     (+ (- (xkb-keymap-max-keycode keymap)
           (xkb-keymap-min-keycode keymap))
@@ -67,9 +67,9 @@
 (test-error "xkb-keymap-key-for-each: fail"
             #t
             (xkb-keymap-key-for-each
-             (xkb-keymap-new-from-names (xkb-context-new))
+             (xkb-keymap-new (xkb-context-new))
              30))
-(let ((keymap (xkb-keymap-new-from-names (xkb-context-new))))
+(let ((keymap (xkb-keymap-new (xkb-context-new))))
   (test-assert "xkb-keymap-key-get-name"
     (xkb-keymap-key-get-name keymap (xkb-keymap-min-keycode keymap)))
   (test-error "xkb-keymap-key-get-name: fail"
@@ -79,7 +79,7 @@
     #f
     (xkb-keymap-key-get-name keymap (- (xkb-keymap-min-keycode keymap) 1))))
 
-(let* ((keymap (xkb-keymap-new-from-names (xkb-context-new)))
+(let* ((keymap (xkb-keymap-new (xkb-context-new)))
        (minkeycode (xkb-keymap-min-keycode keymap)))
   (test-equal "xkb-keymap-key-by-name"
     minkeycode
@@ -94,20 +94,20 @@
               (xkb-keymap-key-by-name keymap "Ndfsdlfjafkd ")))
 
 (test-assert "xkb-keymap-num-mods"
-  (xkb-keymap-num-mods (xkb-keymap-new-from-names (xkb-context-new))))
+  (xkb-keymap-num-mods (xkb-keymap-new (xkb-context-new))))
 
 (test-assert "xkb-keymap-mod-get-name"
-  (let ((keymap (xkb-keymap-new-from-names (xkb-context-new))))
+  (let ((keymap (xkb-keymap-new (xkb-context-new))))
     (xkb-keymap-mod-get-name
      keymap (- (xkb-keymap-num-mods keymap) 1))))
 
-(let ((keymap (xkb-keymap-new-from-names (xkb-context-new))))
+(let ((keymap (xkb-keymap-new (xkb-context-new))))
   (test-equal "xkb-keymap-mod-get-index"
     (- (xkb-keymap-num-mods keymap) 1)
     (xkb-keymap-mod-get-index
      keymap (xkb-keymap-mod-get-name
              keymap (- (xkb-keymap-num-mods keymap) 1)))))
-(let ((keymap (xkb-keymap-new-from-names (xkb-context-new))))
+(let ((keymap (xkb-keymap-new (xkb-context-new))))
   (test-assert "xkb-keymap-num-layouts"
     (xkb-keymap-num-layouts keymap))
   (test-assert "xkb-keymap-layout-get-name"

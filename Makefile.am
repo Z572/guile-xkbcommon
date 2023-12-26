@@ -6,7 +6,7 @@ nobase_go_DATA = $(GOBJECTS)
 guile_install_go_files = install-nobase_goDATA
 $(guile_install_go_files): install-nobase_modDATA
 
-TESTS = tests/context.scm tests/state.scm
+TESTS = tests/context.scm tests/state.scm tests/keysym.scm
 AM_TESTS_ENVIRONMENT = abs_top_srcdir="$(abs_top_srcdir)"
 TEST_EXTENSIONS = .scm
 SCM_LOG_DRIVER = $(top_builddir)/pre-inst-env $(GUILE) --no-auto-compile \

@@ -1,5 +1,6 @@
 (define-module (xkbcommon xkbcommon)
   #:use-module ((rnrs base) #:select (assert))
+  #:use-module (rnrs bytevectors)
   #:use-module (srfi srfi-26)
   #:use-module (bytestructure-class)
   #:use-module ((system foreign) #:prefix ffi:)
@@ -96,8 +97,16 @@
                  "xkb_keysym_get_name"
                  (force %libxkbcommon))
                 (list ffi:uint32 '* ffi:size_t))))
-    (lambda (keysym buffer size)
-      ((force %func) keysym (ffi:string->pointer buffer) size))))
+    (lambda (keysym)
+      (let* ((f (force %func))
+             (len (f keysym ffi:%null-pointer 0)))
+        (if (= len -1)
+            #f
+            (let* ((bv (make-bytevector len))
+                   (p (ffi:bytevector->pointer bv)))
+              (f keysym p (1+ len))
+              (ffi:pointer->string p)))))))
+
 (begin
   (define-public %xkb-keysym-flags-enum
     (bs:enum

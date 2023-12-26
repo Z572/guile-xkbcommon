@@ -602,42 +602,30 @@
     (lambda (keymap key)
       ((force %func) (unwrap-xkb-keymap keymap) key))))
 (define-public xkb-state-new
-  (let ((%func (pointer->procedure/deloy
+  (let ((finalizer (delay (dynamic-func
+                           "xkb_state_unref"
+                           (force %libxkbcommon))))
+        (%func (pointer->procedure/deloy
                 '*
                 (dynamic-func
                  "xkb_state_new"
                  (force %libxkbcommon))
                 (list '*))))
     (lambda (keymap)
-      (wrap-xkb-state
-       ((force %func) (unwrap-xkb-keymap keymap))))))
-(define-public xkb-state-ref
+      (let ((o ((force %func) (unwrap-xkb-keymap keymap))))
+        (ffi:set-pointer-finalizer! o (force finalizer))
+        (wrap-xkb-state o)))))
+
+(define-public xkb-state-get-keymap
   (let ((%func (pointer->procedure/deloy
                 '*
                 (dynamic-func
-                 "xkb_state_ref"
+                 "xkb_state_get_keymap"
                  (force %libxkbcommon))
                 (list '*))))
-    (lambda (state)
-      (wrap-xkb-state ((force %func) (unwrap-xkb-state state))))))
-(define-public xkb-state-unref
-  (let ((%func (pointer->procedure/deloy
-                ffi:void
-                (dynamic-func
-                 "xkb_state_unref"
-                 (force %libxkbcommon))
-                (list '*))))
-    (lambda (state) ((force %func) (unwrap-xkb-state state)))))
-(define-public xkb-state-get-keymap
-  (let ((%func (pointer->procedure/deloy
-                 '*
-                 (dynamic-func
-                   "xkb_state_get_keymap"
-                   (force %libxkbcommon))
-                 (list '*))))
     (lambda (state)
       (wrap-xkb-keymap
-        ((force %func) (unwrap-xkb-state state))))))
+       ((force %func) (unwrap-xkb-state state))))))
 (begin
   (define-public %xkb-key-direction-enum
     (bs:enum '((XKB_KEY_UP 0) (XKB_KEY_DOWN 1))))

@@ -10,7 +10,7 @@ TESTS = tests/context.scm tests/state.scm
 AM_TESTS_ENVIRONMENT = abs_top_srcdir="$(abs_top_srcdir)"
 TEST_EXTENSIONS = .scm
 SCM_LOG_DRIVER = $(top_builddir)/pre-inst-env $(GUILE) --no-auto-compile \
-   $(top_srcdir)/build-aux/test-driver.scm --coverage=yes
+   $(top_srcdir)/build-aux/test-driver.scm
 CLEANFILES = $(GOBJECTS)
 EXTRA_DIST = $(SOURCES) $(TESTS)
 GUILE_WARNINGS =                                          \

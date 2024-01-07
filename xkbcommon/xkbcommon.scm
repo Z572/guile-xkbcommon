@@ -123,9 +123,10 @@
                  "xkb_keysym_from_name"
                  (force %libxkbcommon))
                 (list '* ffi:int))))
-    (lambda (name flags)
+    (lambda* (name #:optional (flags XKB_KEYSYM_NO_FLAGS))
       ((force %func) (ffi:string->pointer name)
        (%xkb-keysym-flags-enum->number flags)))))
+
 (define-public xkb-keysym-to-utf8
   (let ((%func (pointer->procedure/deloy
                  ffi:int

@@ -10,5 +10,8 @@
 (test-equal "xkb-keysym-get-name"
   "A" (xkb-keysym-get-name (char->integer #\A)))
 
+(test-equal "xkb-keysym-from-name"
+  (char->integer #\A) (xkb-keysym-from-name "A"))
+
 
 (test-end "keysym")

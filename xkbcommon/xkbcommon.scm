@@ -136,6 +136,7 @@
 
 (define-public XKB_KEYSYM_NO_FLAGS 0)
 (define-public XKB_KEYSYM_CASE_INSENSITIVE 1)
+
 (define-public xkb-keysym-from-name
   (let ((%func (pointer->procedure/deloy
                 uint32
@@ -146,38 +147,39 @@
     (lambda* (name #:optional (flags XKB_KEYSYM_NO_FLAGS))
       ((force %func) (string->pointer name) flags))))
 
-(define-public xkb-keysym-to-utf8
-  (let ((%func (pointer->procedure/deloy
-                 int
-                 (dynamic-func
-                   "xkb_keysym_to_utf8"
-                   (force %libxkbcommon))
-                 (list uint32 '* size_t))))
-    (lambda (keysym buffer size)
-      ((force %func) keysym (string->pointer buffer) size))))
-(define-public xkb-keysym-to-utf32
-  (let ((%func (pointer->procedure/deloy
-                 uint32
-                 (dynamic-func
-                   "xkb_keysym_to_utf32"
-                   (force %libxkbcommon))
-                 (list uint32))))
-    (lambda (keysym) (%func keysym))))
-(define-public xkb-utf32-to-keysym
-  (let ((%func (pointer->procedure/deloy
-                 uint32
-                 (dynamic-func
-                   "xkb_utf32_to_keysym"
-                   (force %libxkbcommon))
-                 (list uint32))))
-    (lambda (ucs) (%func ucs))))
+;; (define-public xkb-keysym-to-utf8
+;;   (let ((%func (pointer->procedure/deloy
+;;                 int
+;;                 (dynamic-func
+;;                  "xkb_keysym_to_utf8"
+;;                  (force %libxkbcommon))
+;;                 (list uint32 '* size_t))))
+;;     (lambda (keysym buffer size)
+;;       ((force %func) keysym (string->pointer buffer) size))))
+
+;; (define-public xkb-keysym-to-utf32
+;;   (let ((%func (pointer->procedure/deloy
+;;                  uint32
+;;                  (dynamic-func
+;;                    "xkb_keysym_to_utf32"
+;;                    (force %libxkbcommon))
+;;                  (list uint32))))
+;;     (lambda (keysym) (%func keysym))))
+;; (define-public xkb-utf32-to-keysym
+;;   (let ((%func (pointer->procedure/deloy
+;;                  uint32
+;;                  (dynamic-func
+;;                    "xkb_utf32_to_keysym"
+;;                    (force %libxkbcommon))
+;;                  (list uint32))))
+;;     (lambda (ucs) (%func ucs))))
 (define-public xkb-keysym-to-upper
   (let ((%func (pointer->procedure/deloy
-                 uint32
-                 (dynamic-func
-                   "xkb_keysym_to_upper"
-                   (force %libxkbcommon))
-                 (list uint32))))
+                uint32
+                (dynamic-func
+                 "xkb_keysym_to_upper"
+                 (force %libxkbcommon))
+                (list uint32))))
     (lambda (ks) (%func ks))))
 (define-public xkb-keysym-to-lower
   (let ((%func (pointer->procedure/deloy
@@ -209,24 +211,24 @@
         (set-pointer-finalizer! p (force finalizer))
         (wrap-xkb-context p)))))
 
-(define-public xkb-context-set-user-data
-  (let ((%func (pointer->procedure/deloy
-                 void
-                 (dynamic-func
-                   "xkb_context_set_user_data"
-                   (force %libxkbcommon))
-                 (list '* '*))))
-    (lambda (context user_data)
-      ((force %func) (unwrap-xkb-context context) user_data))))
-(define-public xkb-context-get-user-data
-  (let ((%func (pointer->procedure/deloy
-                 '*
-                 (dynamic-func
-                   "xkb_context_get_user_data"
-                   (force %libxkbcommon))
-                 (list '*))))
-    (lambda (context)
-      ((force %func) (unwrap-xkb-context context)))))
+;; (define-public xkb-context-set-user-data
+;;   (let ((%func (pointer->procedure/deloy
+;;                  void
+;;                  (dynamic-func
+;;                    "xkb_context_set_user_data"
+;;                    (force %libxkbcommon))
+;;                  (list '* '*))))
+;;     (lambda (context user_data)
+;;       ((force %func) (unwrap-xkb-context context) user_data))))
+;; (define-public xkb-context-get-user-data
+;;   (let ((%func (pointer->procedure/deloy
+;;                  '*
+;;                  (dynamic-func
+;;                    "xkb_context_get_user_data"
+;;                    (force %libxkbcommon))
+;;                  (list '*))))
+;;     (lambda (context)
+;;       ((force %func) (unwrap-xkb-context context)))))
 (define-public xkb-context-include-path-append
   (let ((%func (pointer->procedure/deloy
                  int

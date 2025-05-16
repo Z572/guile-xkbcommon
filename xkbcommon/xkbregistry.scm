@@ -121,9 +121,9 @@
 (define-xkbregistry-procedure
   (rxkb-context-get-log-level ctx) (int32 "rxkb_context_get_log_level" (list '*))
   (number->%rxkb-log-level-enum (% (unwrap-rxkb-context ctx))))
-(define-xkbregistry-procedure (rxkb-context-set-log-fn ctx log_fn)
-  (void "rxkb_context_set_log_fn" (list '* '*))
-  (% (unwrap-rxkb-context ctx) log_fn))
+;; (define-xkbregistry-procedure (rxkb-context-set-log-fn ctx log_fn)
+;;   (void "rxkb_context_set_log_fn" (list '* '*))
+;;   (% (unwrap-rxkb-context ctx) log_fn))
 (define-xkbregistry-procedure (rxkb-context-parse ctx ruleset)
   (int8 "rxkb_context_parse" (list '* '*))
   (non-zero? (% (unwrap-rxkb-context ctx) (string->pointer ruleset))))
@@ -132,18 +132,18 @@
   (int8 "rxkb_context_parse_default_ruleset" (list '*))
   (non-zero? (% (unwrap-rxkb-context ctx))))
 
-(define-xkbregistry-procedure (rxkb-context-ref ctx)
-  ('* "rxkb_context_ref" (list '*))
-  (wrap-rxkb-context (% (unwrap-rxkb-context ctx))))
-(define-xkbregistry-procedure (rxkb-context-unref ctx)
-  ('* "rxkb_context_unref" (list '*))
-  (wrap-rxkb-context (% (unwrap-rxkb-context ctx))))
-(define-xkbregistry-procedure (rxkb-context-set-user-data ctx user_data)
-  (void "rxkb_context_set_user_data" (list '* '*))
-  (% (unwrap-rxkb-context ctx) user_data))
-(define-xkbregistry-procedure (rxkb-context-get-user-data ctx)
-  ('* "rxkb_context_get_user_data" (list '*))
-  (% (unwrap-rxkb-context ctx)))
+;; (define-xkbregistry-procedure (rxkb-context-ref ctx)
+;;   ('* "rxkb_context_ref" (list '*))
+;;   (wrap-rxkb-context (% (unwrap-rxkb-context ctx))))
+;; (define-xkbregistry-procedure (rxkb-context-unref ctx)
+;;   ('* "rxkb_context_unref" (list '*))
+;;   (wrap-rxkb-context (% (unwrap-rxkb-context ctx))))
+;; (define-xkbregistry-procedure (rxkb-context-set-user-data ctx user_data)
+;;   (void "rxkb_context_set_user_data" (list '* '*))
+;;   (% (unwrap-rxkb-context ctx) user_data))
+;; (define-xkbregistry-procedure (rxkb-context-get-user-data ctx)
+;;   ('* "rxkb_context_get_user_data" (list '*))
+;;   (% (unwrap-rxkb-context ctx)))
 (define-xkbregistry-procedure (rxkb-context-include-path-append ctx path)
   (int8 "rxkb_context_include_path_append" (list '* '*))
   (non-zero? (% (unwrap-rxkb-context ctx) (string->pointer path))))
@@ -158,15 +158,15 @@
   ('* "rxkb_model_next" (list '*))
   (wrap-rxkb-model (% (unwrap-rxkb-model m))))
 
-(define-xkbregistry-procedure
-  (rxkb-model-ref m)
-  ('* "rxkb_model_ref" (list '*))
-  (wrap-rxkb-model (% (unwrap-rxkb-model m))))
+;; (define-xkbregistry-procedure
+;;   (rxkb-model-ref m)
+;;   ('* "rxkb_model_ref" (list '*))
+;;   (wrap-rxkb-model (% (unwrap-rxkb-model m))))
 
-(define-xkbregistry-procedure
-  (rxkb-model-unref m)
-  ('* "rxkb_model_unref" (list '*))
-  (wrap-rxkb-model (% (unwrap-rxkb-model m))))
+;; (define-xkbregistry-procedure
+;;   (rxkb-model-unref m)
+;;   ('* "rxkb_model_unref" (list '*))
+;;   (wrap-rxkb-model (% (unwrap-rxkb-model m))))
 
 (define-xkbregistry-procedure
   (rxkb-model-get-name m)
@@ -194,14 +194,14 @@
   ('* "rxkb_layout_next" (list '*))
   (wrap-rxkb-layout (% (unwrap-rxkb-layout l))))
 
-(define-xkbregistry-procedure
-  (rxkb-layout-ref l)
-  ('* "rxkb_layout_ref" (list '*))
-  (wrap-rxkb-layout (% (unwrap-rxkb-layout l))))
+;; (define-xkbregistry-procedure
+;;   (rxkb-layout-ref l)
+;;   ('* "rxkb_layout_ref" (list '*))
+;;   (wrap-rxkb-layout (% (unwrap-rxkb-layout l))))
 
-(define-xkbregistry-procedure (rxkb-layout-unref l)
-  ('* "rxkb_layout_unref" (list '*))
-  (wrap-rxkb-layout (% (unwrap-rxkb-layout l))))
+;; (define-xkbregistry-procedure (rxkb-layout-unref l)
+;;   ('* "rxkb_layout_unref" (list '*))
+;;   (wrap-rxkb-layout (% (unwrap-rxkb-layout l))))
 
 (define-xkbregistry-procedure
   (rxkb-layout-get-name l)
@@ -231,14 +231,14 @@
   (rxkb-option-group-next g)
   ('* "rxkb_option_group_next" (list '*))
   (wrap-rxkb-option-group (% (unwrap-rxkb-option-group g))))
-(define-xkbregistry-procedure
-  (rxkb-option-group-ref g)
-  ('* "rxkb_option_group_ref" (list '*))
-  (wrap-rxkb-option-group (% (unwrap-rxkb-option-group g))))
-(define-xkbregistry-procedure
-  (rxkb-option-group-unref g)
-  ('* "rxkb_option_group_unref" (list '*))
-  (wrap-rxkb-option-group (% (unwrap-rxkb-option-group g))))
+;; (define-xkbregistry-procedure
+;;   (rxkb-option-group-ref g)
+;;   ('* "rxkb_option_group_ref" (list '*))
+;;   (wrap-rxkb-option-group (% (unwrap-rxkb-option-group g))))
+;; (define-xkbregistry-procedure
+;;   (rxkb-option-group-unref g)
+;;   ('* "rxkb_option_group_unref" (list '*))
+;;   (wrap-rxkb-option-group (% (unwrap-rxkb-option-group g))))
 (define-xkbregistry-procedure
   (rxkb-option-group-get-name m)
   ('* "rxkb_option_group_get_name" (list '*))
@@ -263,14 +263,14 @@
   (rxkb-option-next o)
   ('* "rxkb_option_next" (list '*))
   (wrap-rxkb-option (% (unwrap-rxkb-option o))))
-(define-xkbregistry-procedure
-  (rxkb-option-ref o)
-  ('* "rxkb_option_ref" (list '*))
-  (wrap-rxkb-option (% (unwrap-rxkb-option o))))
-(define-xkbregistry-procedure
-  (rxkb-option-unref o)
-  ('* "rxkb_option_unref" (list '*))
-  (wrap-rxkb-option (% (unwrap-rxkb-option o))))
+;; (define-xkbregistry-procedure
+;;   (rxkb-option-ref o)
+;;   ('* "rxkb_option_ref" (list '*))
+;;   (wrap-rxkb-option (% (unwrap-rxkb-option o))))
+;; (define-xkbregistry-procedure
+;;   (rxkb-option-unref o)
+;;   ('* "rxkb_option_unref" (list '*))
+;;   (wrap-rxkb-option (% (unwrap-rxkb-option o))))
 (define-xkbregistry-procedure
   (rxkb-option-get-name o)
   ('* "rxkb_option_get_name" (list '*))
@@ -286,12 +286,12 @@
 (define-xkbregistry-procedure (rxkb-option-get-popularity o)
   (int32 "rxkb_option_get_popularity" (list '*))
   (number->%rxkb-popularity-enum (% (unwrap-rxkb-option o))))
-(define-xkbregistry-procedure (rxkb-iso639-code-ref iso639)
-  ('* "rxkb_iso639_code_ref" (list '*))
-  (wrap-rxkb-iso639-code (% (unwrap-rxkb-iso639-code iso639))))
-(define-xkbregistry-procedure (rxkb-iso639-code-unref iso639)
-  ('* "rxkb_iso639_code_unref" (list '*))
-  (wrap-rxkb-iso639-code (% (unwrap-rxkb-iso639-code iso639))))
+;; (define-xkbregistry-procedure (rxkb-iso639-code-ref iso639)
+;;   ('* "rxkb_iso639_code_ref" (list '*))
+;;   (wrap-rxkb-iso639-code (% (unwrap-rxkb-iso639-code iso639))))
+;; (define-xkbregistry-procedure (rxkb-iso639-code-unref iso639)
+;;   ('* "rxkb_iso639_code_unref" (list '*))
+;;   (wrap-rxkb-iso639-code (% (unwrap-rxkb-iso639-code iso639))))
 (define-xkbregistry-procedure (rxkb-iso639-code-get-code iso639)
   ('* "rxkb_iso639_code_get_code" (list '*))
   (pointer->string* (% (unwrap-rxkb-iso639-code iso639))))
@@ -301,12 +301,12 @@
 (define-xkbregistry-procedure (rxkb-iso639-code-next iso639)
   ('* "rxkb_iso639_code_next" (list '*))
   (wrap-rxkb-iso639-code (% (unwrap-rxkb-iso639-code iso639))))
-(define-xkbregistry-procedure (rxkb-iso3166-code-ref iso3166)
-  ('* "rxkb_iso3166_code_ref" (list '*))
-  (wrap-rxkb-iso3166-code (% (unwrap-rxkb-iso3166-code iso3166))))
-(define-xkbregistry-procedure (rxkb-iso3166-code-unref iso3166)
-  ('* "rxkb_iso3166_code_unref" (list '*))
-  (wrap-rxkb-iso3166-code (% (unwrap-rxkb-iso3166-code iso3166))))
+;; (define-xkbregistry-procedure (rxkb-iso3166-code-ref iso3166)
+;;   ('* "rxkb_iso3166_code_ref" (list '*))
+;;   (wrap-rxkb-iso3166-code (% (unwrap-rxkb-iso3166-code iso3166))))
+;; (define-xkbregistry-procedure (rxkb-iso3166-code-unref iso3166)
+;;   ('* "rxkb_iso3166_code_unref" (list '*))
+;;   (wrap-rxkb-iso3166-code (% (unwrap-rxkb-iso3166-code iso3166))))
 (define-xkbregistry-procedure (rxkb-iso3166-code-get-code iso3166)
   ('* "rxkb_iso3166_code_get_code" (list '*))
   (pointer->string* (% (unwrap-rxkb-iso3166-code iso3166))))

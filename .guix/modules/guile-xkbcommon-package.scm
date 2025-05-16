@@ -1,5 +1,4 @@
 (define-module (guile-xkbcommon-package)
-  #:use-module (guile-bytestructure-class-package)
   #:use-module (guix utils)
   #:use-module (guix packages)
   #:use-module ((guix licenses) #:prefix license:)
@@ -46,10 +45,6 @@
                   libxkbcommon
                   ;;; xkbregistry pc file require
                   libxml2))
-    (propagated-inputs
-     (list
-      guile-bytestructure-class
-      guile-bytestructures))
     (synopsis "")
     (description "")
     (home-page "")

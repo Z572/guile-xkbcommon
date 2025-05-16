@@ -5,11 +5,9 @@ automake
 pkg-config
 xkbcommon
 guile
-guile-bytestructure-class
-scheme-bytestructures
 
 #+begin_src 
-guix time-machine --channels=channels.scm -- shell
+guix shell
 #+end_src
 
 

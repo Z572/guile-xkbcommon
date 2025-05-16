@@ -31,8 +31,6 @@ PKG_CHECK_VAR([XKBCOMMON_LIBDIR],[xkbcommon],[libdir])
 PKG_CHECK_VAR([XKBREGISTRY_LIBDIR],[xkbregistry],[libdir])
 AC_SUBST([XKBCOMMON_LIBDIR])
 AC_SUBST([XKBREGISTRY_LIBDIR])
-GUILE_MODULE_REQUIRED([bytestructures guile])
-GUILE_MODULE_REQUIRED([bytestructure-class])
 
 AC_SUBST([guilemoduledir])
 AC_SUBST([guileobjectdir])

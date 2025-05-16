@@ -25,17 +25,15 @@
   (xkb-keymap? (xkb-keymap-new (xkb-context-new))))
 (test-assert "xkb-keymap-get-as-string"
   (xkb-keymap-get-as-string
-   (xkb-keymap-new (xkb-context-new))
-   XKB_KEYMAP_FORMAT_TEXT_V1))
+   (xkb-keymap-new (xkb-context-new))))
 (test-error "xkb-keymap-get-as-string: error"
             #t
             (xkb-keymap-get-as-string
-             #f XKB_KEYMAP_FORMAT_TEXT_V1))
+             #f))
 
 (test-assert "xkb-keymap-new: string"
   (let ((str (xkb-keymap-get-as-string
-              (xkb-keymap-new (xkb-context-new))
-              XKB_KEYMAP_FORMAT_TEXT_V1)))
+              (xkb-keymap-new (xkb-context-new)))))
     (xkb-keymap? (xkb-keymap-new (xkb-context-new) str))))
 (test-equal "xkb-keymap-new: string: fail"
   #f

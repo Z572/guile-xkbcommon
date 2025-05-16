@@ -6,7 +6,13 @@
   #:use-module (system foreign)
   #:use-module (oop goops)
   #:use-module (xkbcommon config)
-  #:export (make-xkb-rule-names))
+  #:export (make-xkb-rule-names
+            xkb-rule-names?
+            xkb-rule-names-rules
+            xkb-rule-names-model
+            xkb-rule-names-layout
+            xkb-rule-names-variant
+            xkb-rule-names-options))
 
 (define (pointer->string* ptr)
   (if (null-pointer? ptr)
@@ -109,13 +115,6 @@
          (string->pointer* (xkb-rule-names-variant x))
          (string->pointer* (xkb-rule-names-options x)))))
 
-(export xkb-rule-names?
-        ;; xkb-rule-names->pointer
-        xkb-rule-names-rules
-        xkb-rule-names-model
-        xkb-rule-names-layout
-        xkb-rule-names-variant
-        xkb-rule-names-options)
 
 (define-public xkb-keysym-get-name
   (let ((%func (pointer->procedure/deloy

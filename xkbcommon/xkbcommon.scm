@@ -14,10 +14,39 @@
             xkb-rule-names-variant
             xkb-rule-names-options))
 
+(define-syntax-parameter %
+  (lambda (x)
+    (syntax-violation '% "% used outside of a define-xkb-procedure" x)))
+
+(define-syntax define-xkb-procedure
+  (syntax-rules ()
+    ((define-xkb-procedure (pname args ...)
+       (c-return c-name c-args)
+       body ...)
+     (define-public pname
+       (let ((%% (delay (pointer->procedure
+                         c-return
+                         (dynamic-func c-name (force %libxkbcommon))
+                         c-args))))
+         (syntax-parameterize
+             ((% (make-variable-transformer
+                  (lambda (x)
+                    (syntax-case x ()
+                      ((_ xargs (... ...))
+                       #`((force %%) xargs (... ...)))
+                      (o
+                       (identifier? #'o)
+                       #`(force %%)))))
+                 ))
+           (lambda* (args ...)
+             #((name . pname))
+             body ...)))))))
+
 (define (pointer->string* ptr)
   (if (null-pointer? ptr)
       #f
       (pointer->string ptr)))
+
 (define-inlinable (string->pointer* str)
   (if str
       (string->pointer str)
@@ -79,6 +108,7 @@
 (define-public xkb_mod_mask_t uint32)
 (define-public xkb_led_index_t uint32)
 (define-public xkb_led_mask_t uint32)
+(define const-char-* '*)
 
 (define-class <xkb-rule-names> ()
   (rules #:init-value #f
@@ -116,35 +146,25 @@
          (string->pointer* (xkb-rule-names-options x)))))
 
 
-(define-public xkb-keysym-get-name
-  (let ((%func (pointer->procedure/deloy
-                int
-                (dynamic-func
-                 "xkb_keysym_get_name"
-                 (force %libxkbcommon))
-                (list uint32 '* size_t))))
-    (lambda (keysym)
-      (let* ((f (force %func))
-             (len (f keysym %null-pointer 0)))
-        (if (= len -1)
-            #f
-            (let* ((bv (make-bytevector len))
-                   (p (bytevector->pointer bv)))
-              (f keysym p (1+ len))
-              (pointer->string p)))))))
+(define-xkb-procedure (xkb-keysym-get-name keysym)
+  (int "xkb_keysym_get_name" (list uint32 '* size_t))
+  (let* ((f %)
+         (len (f keysym %null-pointer 0)))
+    (if (= len -1)
+        #f
+        (let* ((bv (make-bytevector len))
+               (p (bytevector->pointer bv)))
+          (f keysym p (1+ len))
+          (pointer->string p)))))
 
 (define-public XKB_KEYSYM_NO_FLAGS 0)
 (define-public XKB_KEYSYM_CASE_INSENSITIVE 1)
 
-(define-public xkb-keysym-from-name
-  (let ((%func (pointer->procedure/deloy
-                uint32
-                (dynamic-func
-                 "xkb_keysym_from_name"
-                 (force %libxkbcommon))
-                (list '* int))))
-    (lambda* (name #:optional (flags XKB_KEYSYM_NO_FLAGS))
-      ((force %func) (string->pointer name) flags))))
+(define-xkb-procedure (xkb-keysym-from-name
+                       name
+                       #:optional (flags XKB_KEYSYM_NO_FLAGS))
+  (uint32 "xkb_keysym_from_name" (list '* int))
+  (% (string->pointer name) flags))
 
 ;; (define-public xkb-keysym-to-utf8
 ;;   (let ((%func (pointer->procedure/deloy
@@ -172,23 +192,13 @@
 ;;                    (force %libxkbcommon))
 ;;                  (list uint32))))
 ;;     (lambda (ucs) (%func ucs))))
-(define-public xkb-keysym-to-upper
-  (let ((%func (pointer->procedure/deloy
-                uint32
-                (dynamic-func
-                 "xkb_keysym_to_upper"
-                 (force %libxkbcommon))
-                (list uint32))))
-    (lambda (ks) (%func ks))))
-(define-public xkb-keysym-to-lower
-  (let ((%func (pointer->procedure/deloy
-                uint32
-                (dynamic-func
-                 "xkb_keysym_to_lower"
-                 (force %libxkbcommon))
-                (list uint32))))
-    (lambda (ks) (%func ks))))
+(define-xkb-procedure (xkb-keysym-to-upper ks)
+  (uint32 "xkb_keysym_to_upper" (list uint32))
+  (% ks))
 
+(define-xkb-procedure (xkb-keysym-to-lower ks)
+  (uint32 "xkb_keysym_to_lower" (list uint32))
+  (% ks))
 
 ;; context
 
@@ -228,62 +238,41 @@
 ;;                  (list '*))))
 ;;     (lambda (context)
 ;;       ((force %func) (unwrap-xkb-context context)))))
-(define-public xkb-context-include-path-append
-  (let ((%func (pointer->procedure/deloy
-                 int
-                 (dynamic-func
-                   "xkb_context_include_path_append"
-                   (force %libxkbcommon))
-                 (list '* '*))))
-    (lambda (context path)
-      ((force %func) (unwrap-xkb-context context)
-             (string->pointer path)))))
-(define-public xkb-context-include-path-append-default
-  (let ((%func (pointer->procedure/deloy
-                 int
-                 (dynamic-func
-                   "xkb_context_include_path_append_default"
-                   (force %libxkbcommon))
-                 (list '*))))
-    (lambda (context)
-      ((force %func) (unwrap-xkb-context context)))))
-(define-public xkb-context-include-path-reset-defaults
-  (let ((%func (pointer->procedure/deloy
-                 int
-                 (dynamic-func
-                   "xkb_context_include_path_reset_defaults"
-                   (force %libxkbcommon))
-                 (list '*))))
-    (lambda (context)
-      ((force %func) (unwrap-xkb-context context)))))
-(define-public xkb-context-include-path-clear
-  (let ((%func (pointer->procedure/deloy
-                 void
-                 (dynamic-func
-                   "xkb_context_include_path_clear"
-                   (force %libxkbcommon))
-                 (list '*))))
-    (lambda (context)
-      ((force %func) (unwrap-xkb-context context)))))
-(define-public xkb-context-num-include-paths
-  (let ((%func (pointer->procedure/deloy
-                 unsigned-int
-                 (dynamic-func
-                   "xkb_context_num_include_paths"
-                   (force %libxkbcommon))
-                 (list '*))))
-    (lambda (context)
-      ((force %func) (unwrap-xkb-context context)))))
-(define-public xkb-context-include-path-get
-  (let ((%func (pointer->procedure/deloy
-                '*
-                (dynamic-func
-                 "xkb_context_include_path_get"
-                 (force %libxkbcommon))
-                (list '* unsigned-int))))
-    (lambda (context index)
-      (pointer->string*
-       ((force %func) (unwrap-xkb-context context) index)))))
+(define-xkb-procedure (xkb-context-include-path-append context path)
+  (int "xkb_context_include_path_append" (list '* '*))
+  (assert (xkb-context? context))
+  (% (unwrap-xkb-context context)
+     (string->pointer path)))
+
+(define-xkb-procedure (xkb-context-include-path-append-default context)
+  (int "xkb_context_include_path_append_default" '(*))
+  (assert (xkb-context? context))
+  (% (unwrap-xkb-context context)))
+
+(define-xkb-procedure (xkb-context-include-path-reset-defaults context)
+  (int "xkb_context_include_path_reset_defaults" (list '*))
+  (assert (xkb-context? context))
+  (% (unwrap-xkb-context context)))
+
+(define-xkb-procedure (xkb-context-include-path-clear context)
+  (void "xkb_context_include_path_clear" (list '*))
+  (assert (xkb-context? context))
+  (% (unwrap-xkb-context context)))
+
+(define-xkb-procedure (xkb-context-num-include-paths context)
+  (unsigned-int "xkb_context_num_include_paths" (list '*))
+  (assert (xkb-context? context))
+  (% (unwrap-xkb-context context)))
+
+(define-xkb-procedure (xkb-context-include-path-get context index)
+  ('* "xkb_context_include_path_get" (list '* unsigned-int))
+  (assert (xkb-context? context))
+  (pointer->string*
+   (% (unwrap-xkb-context context) index)))
+
+;; (define-public (xkb-context-include-paths context)
+;;   (map (cut xkb-context-include-path-get context <>)
+;;        (iota (xkb-context-num-include-paths context))))
 
 (define-public XKB_LOG_LEVEL_CRITICAL 10)
 (define-public XKB_LOG_LEVEL_ERROR 20)
@@ -291,47 +280,31 @@
 (define-public XKB_LOG_LEVEL_INFO 40)
 (define-public XKB_LOG_LEVEL_DEBUG 50)
 
-(define-public xkb-context-set-log-level
-  (let ((%func (pointer->procedure/deloy
-                void
-                (dynamic-func
-                 "xkb_context_set_log_level"
-                 (force %libxkbcommon))
-                (list '* int))))
-    (lambda (context level)
-      ((force %func) (unwrap-xkb-context context)
-       level))))
+(define-xkb-procedure (xkb-context-set-log-level! context level)
+  (void "xkb_context_set_log_level" (list '* int))
+  (assert (xkb-context? context))
+  (% (unwrap-xkb-context context) level))
+(define-public set-xkb-context-log-level!
+  xkb-context-set-log-level!)
 
-(define-public xkb-context-get-log-level
-  (let ((%func (pointer->procedure/deloy
-                int
-                (dynamic-func
-                 "xkb_context_get_log_level"
-                 (force %libxkbcommon))
-                (list '*))))
-    (lambda (context)
-      ((force %func) (unwrap-xkb-context context)))))
+(define-xkb-procedure (xkb-context-get-log-level context)
+  (int "xkb_context_get_log_level" (list '*))
+  (assert (xkb-context? context))
+  (% (unwrap-xkb-context context)))
 
-(define-public xkb-context-set-log-verbosity
-  (let ((%func (pointer->procedure/deloy
-                void
-                (dynamic-func
-                 "xkb_context_set_log_verbosity"
-                 (force %libxkbcommon))
-                (list '* int))))
-    (lambda (context verbosity)
-      ((force %func) (unwrap-xkb-context context) verbosity))))
+(define-public xkb-context-log-level
+  (make-procedure-with-setter xkb-context-get-log-level
+                              xkb-context-set-log-level!))
 
-(define-public xkb-context-get-log-verbosity
-  (let ((%func (pointer->procedure/deloy
-                int
-                (dynamic-func
-                 "xkb_context_get_log_verbosity"
-                 (force %libxkbcommon))
-                (list '*))))
-    (lambda (context)
-      ((force %func) (unwrap-xkb-context context)))))
+(define-xkb-procedure (xkb-context-set-log-verbosity! context verbosity)
+  (void "xkb_context_set_log_verbosity" (list '* int))
+  (assert (xkb-context? context))
+  (% (unwrap-xkb-context context) verbosity))
 
+(define-xkb-procedure (xkb-context-get-log-verbosity context)
+  (int "xkb_context_get_log_verbosity" (list '*))
+  (assert (xkb-context? context))
+  (% (unwrap-xkb-context context)))
 
 ;; (define-public xkb-context-set-log-fn
 ;;   (let ((%func (pointer->procedure/deloy
@@ -367,6 +340,7 @@
               #:key
               (format XKB_KEYMAP_FORMAT_TEXT_V1)
               (flags XKB_KEYMAP_COMPILE_NO_FLAGS))
+      #((name . xkb-keymap-new))
       (assert (xkb-context? context))
       (assert (or (xkb-rule-names? names-or-string)
                   (string? names-or-string)))
@@ -384,237 +358,143 @@
         (set-pointer-finalizer! p (force finalizer))
         (wrap-xkb-keymap p)))))
 
-(define-public xkb-keymap-get-as-string
-  (let ((%func (pointer->procedure/deloy
-                '*
-                (dynamic-func
-                 "xkb_keymap_get_as_string"
-                 (force %libxkbcommon))
-                (list '* int))))
-    (lambda* (keymap #:key
-                     (format XKB_KEYMAP_FORMAT_TEXT_V1))
-      (assert (xkb-keymap? keymap))
-      (pointer->string*
-       ((force %func) (unwrap-xkb-keymap keymap)
-        format)))))
+(define-xkb-procedure (xkb-keymap-get-as-string
+                       keymap
+                       #:key
+                       (format XKB_KEYMAP_FORMAT_TEXT_V1))
+  ('* "xkb_keymap_get_as_string" (list '* int))
+  (assert (xkb-keymap? keymap))
+  (let ((str-p (% (unwrap-xkb-keymap keymap) format)))
+    (pointer->string* str-p)))
 
-(define-public xkb-keymap-min-keycode
-  (let ((%func (pointer->procedure/deloy
-                uint32
-                (dynamic-func
-                 "xkb_keymap_min_keycode"
-                 (force %libxkbcommon))
-                (list '*))))
-    (lambda (keymap)
-      (assert (xkb-keymap? keymap))
-      ((force %func) (unwrap-xkb-keymap keymap)))))
+(define-xkb-procedure (xkb-keymap-min-keycode keymap)
+  (uint32 "xkb_keymap_min_keycode" (list '*))
+  (assert (xkb-keymap? keymap))
+  (% (unwrap-xkb-keymap keymap)))
 
-(define-public xkb-keymap-max-keycode
-  (let ((%func (pointer->procedure/deloy
-                uint32
-                (dynamic-func
-                 "xkb_keymap_max_keycode"
-                 (force %libxkbcommon))
-                (list '*))))
-    (lambda (keymap)
-      (assert (xkb-keymap? keymap))
-      ((force %func) (unwrap-xkb-keymap keymap)))))
+(define-xkb-procedure (xkb-keymap-max-keycode keymap)
+  (uint32 "xkb_keymap_max_keycode" (list '*))
+  (assert (xkb-keymap? keymap))
+  (% (unwrap-xkb-keymap keymap)))
 
-(define-public xkb-keymap-key-for-each
-  (let ((%func (pointer->procedure/deloy
-                void
-                (dynamic-func
-                 "xkb_keymap_key_for_each"
-                 (force %libxkbcommon))
-                (list '* '* '*))))
-    (lambda (keymap proc)
-      (assert (xkb-keymap? keymap))
-      (assert (procedure? proc))
+(define-xkb-procedure (xkb-keymap-key-for-each keymap proc)
+  (void "xkb_keymap_key_for_each" (list '* '* '*))
+  (assert (xkb-keymap? keymap))
+  (assert (procedure? proc))
+  (define (iter keymap key data)
+    (proc (wrap-xkb-keymap keymap) key))
+  (% (unwrap-xkb-keymap keymap)
+     (procedure->pointer void iter `(* ,uint32 *))
+     %null-pointer))
 
-      (define (iter keymap key data)
-        (proc (wrap-xkb-keymap keymap) key))
-      ((force %func) (unwrap-xkb-keymap keymap)
-             (procedure->pointer void iter `(* ,uint32 *))
-             %null-pointer))))
-(define-public xkb-keymap-key-get-name
-  (let ((%func (pointer->procedure/deloy
-                '*
-                (dynamic-func
-                 "xkb_keymap_key_get_name"
-                 (force %libxkbcommon))
-                (list '* uint32))))
-    (lambda (keymap key)
-      (assert (xkb-keymap? keymap))
-      (pointer->string*
-       ((force %func) (unwrap-xkb-keymap keymap) key)))))
-(define-public xkb-keymap-key-by-name
-  (let ((%func (pointer->procedure/deloy
-                uint32
-                (dynamic-func
-                 "xkb_keymap_key_by_name"
-                 (force %libxkbcommon))
-                (list '* '*))))
-    (lambda (keymap name)
-      (let ((o ((force %func) (unwrap-xkb-keymap keymap)
-                (string->pointer name))))
-        (if (= o XKB_KEYCODE_INVALID)
-            (throw 'xkb-keycode-invalid "~a is invalib!" name)
-            o)))))
-(define-public xkb-keymap-num-mods
-  (let ((%func (pointer->procedure/deloy
-                uint32
-                (dynamic-func
-                 "xkb_keymap_num_mods"
-                 (force %libxkbcommon))
-                (list '*))))
-    (lambda (keymap)
-      (assert (xkb-keymap? keymap))
-      ((force %func) (unwrap-xkb-keymap keymap)))))
+(define-xkb-procedure (xkb-keymap-key-get-name keymap key)
+  (const-char-* "xkb_keymap_key_get_name" (list '* xkb_keycode_t))
+  (assert (xkb-keymap? keymap))
+  (pointer->string*
+   (% (unwrap-xkb-keymap keymap) key)))
 
-(define-public xkb-keymap-mod-get-name
-  (let ((%func (pointer->procedure/deloy
-                '*
-                (dynamic-func
-                 "xkb_keymap_mod_get_name"
-                 (force %libxkbcommon))
-                (list '* uint32))))
-    (lambda (keymap idx)
-      (assert (xkb-keymap? keymap))
-      (pointer->string*
-       ((force %func) (unwrap-xkb-keymap keymap) idx)))))
+(define-xkb-procedure (xkb-keymap-key-by-name keymap name)
+  (uint32 "xkb_keymap_key_by_name" (list '* '*))
+  (assert (xkb-keymap? keymap))
+  (let ((o (% (unwrap-xkb-keymap keymap) (string->pointer name))))
+    (if (= o XKB_KEYCODE_INVALID)
+        (throw 'xkb-keycode-invalid "~a is invalib!" name)
+        o)))
+(define-xkb-procedure (xkb-keymap-num-mods keymap)
+  (uint32 "xkb_keymap_num_mods" (list '*))
+  (assert (xkb-keymap? keymap))
+  (% (unwrap-xkb-keymap keymap)))
 
-(define-public xkb-keymap-mod-get-index
-  (let ((%func (pointer->procedure/deloy
-                uint32
-                (dynamic-func
-                 "xkb_keymap_mod_get_index"
-                 (force %libxkbcommon))
-                (list '* '*))))
-    (lambda (keymap name)
-      (assert (xkb-keymap? keymap))
-      (assert (string? name))
-      ((force %func) (unwrap-xkb-keymap keymap)
-             (string->pointer name)))))
-(define-public xkb-keymap-num-layouts
-  (let ((%func (pointer->procedure/deloy
-                uint32
-                (dynamic-func
-                 "xkb_keymap_num_layouts"
-                 (force %libxkbcommon))
-                (list '*))))
-    (lambda (keymap)
-      (assert (xkb-keymap? keymap))
-      ((force %func) (unwrap-xkb-keymap keymap)))))
-(define-public xkb-keymap-layout-get-name
-  (let ((%func (pointer->procedure/deloy
-                '*
-                (dynamic-func
-                 "xkb_keymap_layout_get_name"
-                 (force %libxkbcommon))
-                (list '* uint32))))
-    (lambda (keymap idx)
-      (assert (xkb-keymap? keymap))
-      (pointer->string*
-       ((force %func) (unwrap-xkb-keymap keymap) idx)))))
-(define-public xkb-keymap-layout-get-index
-  (let ((%func (pointer->procedure/deloy
-                uint32
-                (dynamic-func
-                 "xkb_keymap_layout_get_index"
-                 (force %libxkbcommon))
-                (list '* '*))))
-    (lambda (keymap name)
-      (assert (xkb-keymap? keymap))
-      ((force %func) (unwrap-xkb-keymap keymap)
-             (string->pointer name)))))
-(define-public xkb-keymap-num-leds
-  (let ((%func (pointer->procedure/deloy
-                 uint32
-                 (dynamic-func
-                   "xkb_keymap_num_leds"
-                   (force %libxkbcommon))
-                 (list '*))))
-    (lambda (keymap)
-      ((force %func) (unwrap-xkb-keymap keymap)))))
-(define-public xkb-keymap-led-get-name
-  (let ((%func (pointer->procedure/deloy
-                 '*
-                 (dynamic-func
-                   "xkb_keymap_led_get_name"
-                   (force %libxkbcommon))
-                 (list '* uint32))))
-    (lambda (keymap idx)
-      (pointer->string*
-        ((force %func) (unwrap-xkb-keymap keymap) idx)))))
-(define-public xkb-keymap-led-get-index
-  (let ((%func (pointer->procedure/deloy
-                 uint32
-                 (dynamic-func
-                   "xkb_keymap_led_get_index"
-                   (force %libxkbcommon))
-                 (list '* '*))))
-    (lambda (keymap name)
-      ((force %func) (unwrap-xkb-keymap keymap)
-             (string->pointer name)))))
-(define-public xkb-keymap-num-layouts-for-key
-  (let ((%func (pointer->procedure/deloy
-                 uint32
-                 (dynamic-func
-                   "xkb_keymap_num_layouts_for_key"
-                   (force %libxkbcommon))
-                 (list '* uint32))))
-    (lambda (keymap key)
-      ((force %func) (unwrap-xkb-keymap keymap) key))))
-(define-public xkb-keymap-num-levels-for-key
-  (let ((%func (pointer->procedure/deloy
-                 uint32
-                 (dynamic-func
-                   "xkb_keymap_num_levels_for_key"
-                   (force %libxkbcommon))
-                 (list '* uint32 uint32))))
-    (lambda (keymap key layout)
-      ((force %func) (unwrap-xkb-keymap keymap) key layout))))
-(define-public xkb-keymap-key-get-mods-for-level
-  (let ((%func (pointer->procedure/deloy
-                 size_t
-                 (dynamic-func
-                   "xkb_keymap_key_get_mods_for_level"
-                   (force %libxkbcommon))
-                 (list '*
-                       uint32
-                       uint32
-                       uint32
-                       '*
-                       size_t))))
-    (lambda (keymap key layout level masks_out masks_size)
-      ((force %func) (unwrap-xkb-keymap keymap)
-             key
-             layout
-             level
-             masks_out
-             masks_size))))
-(define-public xkb-keymap-key-get-syms-by-level
-  (let ((%func (pointer->procedure/deloy
-                 int
-                 (dynamic-func
-                   "xkb_keymap_key_get_syms_by_level"
-                   (force %libxkbcommon))
-                 (list '* uint32 uint32 uint32 '*))))
-    (lambda (keymap key layout level syms_out)
-      ((force %func) (unwrap-xkb-keymap keymap)
-             key
-             layout
-             level
-             syms_out))))
-(define-public xkb-keymap-key-repeats
-  (let ((%func (pointer->procedure/deloy
-                 int
-                 (dynamic-func
-                   "xkb_keymap_key_repeats"
-                   (force %libxkbcommon))
-                 (list '* uint32))))
-    (lambda (keymap key)
-      ((force %func) (unwrap-xkb-keymap keymap) key))))
+(define-xkb-procedure (xkb-keymap-mod-get-name keymap idx)
+  ('* "xkb_keymap_mod_get_name" (list '* uint32))
+  (assert (xkb-keymap? keymap))
+  (pointer->string*
+   (% (unwrap-xkb-keymap keymap) idx)))
+
+(define-xkb-procedure (xkb-keymap-mod-get-index keymap name)
+  (uint32  "xkb_keymap_mod_get_index" (list '* '*))
+  (assert (xkb-keymap? keymap))
+  (assert (string? name))
+  (% (unwrap-xkb-keymap keymap)
+     (string->pointer name)))
+
+(define-xkb-procedure (xkb-keymap-num-layouts keymap)
+  (uint32 "xkb_keymap_num_layouts" (list '*))
+  (assert (xkb-keymap? keymap))
+  (% (unwrap-xkb-keymap keymap)))
+
+(define-xkb-procedure (xkb-keymap-layout-get-name keymap idx)
+  ('* "xkb_keymap_layout_get_name" (list '* uint32))
+  (assert (xkb-keymap? keymap))
+  (pointer->string*
+   (% (unwrap-xkb-keymap keymap) idx)))
+
+(define-xkb-procedure (xkb-keymap-layout-get-index keymap name)
+  (uint32 "xkb_keymap_layout_get_index" (list '* '*))
+  (assert (xkb-keymap? keymap))
+  (% (unwrap-xkb-keymap keymap) (string->pointer name)))
+
+(define-xkb-procedure (xkb-keymap-num-leds keymap)
+  (uint32 "xkb_keymap_num_leds" (list '*))
+  (% (unwrap-xkb-keymap keymap)))
+
+(define-xkb-procedure (xkb-keymap-led-get-name keymap idx)
+  ('* "xkb_keymap_led_get_name" (list '* uint32))
+  (pointer->string*
+   (% (unwrap-xkb-keymap keymap) idx)))
+
+(define-xkb-procedure (xkb-keymap-led-get-index keymap name)
+  (uint32 "xkb_keymap_led_get_index" (list '* '*))
+  (% (unwrap-xkb-keymap keymap)
+     (string->pointer name)))
+
+(define-xkb-procedure (xkb-keymap-num-layouts-for-key keymap key)
+  (uint32 "xkb_keymap_num_layouts_for_key" (list '* uint32))
+  (% (unwrap-xkb-keymap keymap) key))
+
+(define-xkb-procedure (xkb-keymap-num-levels-for-key keymap key layout)
+  (xkb_level_index_t "xkb_keymap_num_levels_for_key"
+                     (list '* xkb_keycode_t xkb_layout_index_t))
+  (% (unwrap-xkb-keymap keymap) key layout))
+
+;; (define-public xkb-keymap-key-get-mods-for-level
+;;   (let ((%func (pointer->procedure/deloy
+;;                 size_t
+;;                 (dynamic-func
+;;                  "xkb_keymap_key_get_mods_for_level"
+;;                  (force %libxkbcommon))
+;;                 (list '*
+;;                       uint32
+;;                       uint32
+;;                       uint32
+;;                       '*
+;;                       size_t))))
+;;     (lambda (keymap key layout level masks_out masks_size)
+;;       ((force %func) (unwrap-xkb-keymap keymap)
+;;        key
+;;        layout
+;;        level
+;;        masks_out
+;;        masks_size))))
+
+;; (define-public xkb-keymap-key-get-syms-by-level
+;;   (let ((%func (pointer->procedure/deloy
+;;                 int
+;;                 (dynamic-func
+;;                  "xkb_keymap_key_get_syms_by_level"
+;;                  (force %libxkbcommon))
+;;                 (list '* uint32 uint32 uint32 '*))))
+;;     (lambda (keymap key layout level syms_out)
+;;       ((force %func) (unwrap-xkb-keymap keymap)
+;;        key
+;;        layout
+;;        level
+;;        syms_out))))
+
+(define-xkb-procedure (xkb-keymap-key-repeats keymap key)
+  (int "xkb_keymap_key_repeats" (list '* uint32))
+  (% (unwrap-xkb-keymap keymap) key))
+
 (define-public xkb-state-new
   (let ((finalizer (delay (dynamic-func
                            "xkb_state_unref"
@@ -630,16 +510,12 @@
         (set-pointer-finalizer! o (force finalizer))
         (wrap-xkb-state o)))))
 
-(define-public xkb-state-get-keymap
-  (let ((%func (pointer->procedure/deloy
-                '*
-                (dynamic-func
-                 "xkb_state_get_keymap"
-                 (force %libxkbcommon))
-                (list '*))))
-    (lambda (state)
-      (wrap-xkb-keymap
-       ((force %func) (unwrap-xkb-state state))))))
+(define-xkb-procedure (xkb-state-get-keymap state)
+  ('* "xkb_state_get_keymap" (list '*))
+  (assert (xkb-state? state))
+  (wrap-xkb-keymap
+   (% (unwrap-xkb-state state))))
+
 (define-public XKB_KEY_UP 0)
 (define-public XKB_KEY_DOWN 1)
 
@@ -653,53 +529,31 @@
 (define-public XKB_STATE_LAYOUT_EFFECTIVE 128)
 (define-public XKB_STATE_LEDS 256)
 
-(define-public xkb-state-update-key
-  (let ((%func (pointer->procedure/deloy
-                int
-                (dynamic-func
-                 "xkb_state_update_key"
-                 (force %libxkbcommon))
-                (list '* uint32 int))))
-    (lambda (state key direction)
-      ((force %func) (unwrap-xkb-state state)
-       key
-       direction))))
-(define-public xkb-state-update-mask
-  (let ((%func (pointer->procedure/deloy
-                 int
-                 (dynamic-func
-                   "xkb_state_update_mask"
-                   (force %libxkbcommon))
-                 (list '*
-                       uint32
-                       uint32
-                       uint32
-                       uint32
-                       uint32
-                       uint32))))
-    (lambda (state
-             depressed_mods
-             latched_mods
-             locked_mods
-             depressed_layout
-             latched_layout
-             locked_layout)
-      ((force %func) (unwrap-xkb-state state)
-             depressed_mods
-             latched_mods
-             locked_mods
-             depressed_layout
-             latched_layout
-             locked_layout))))
-(define-public xkb-state-key-get-syms
-  (let ((%func (pointer->procedure/deloy
-                int
-                (dynamic-func
-                 "xkb_state_key_get_syms"
-                 (force %libxkbcommon))
-                (list '* uint32 '*))))
-    (lambda (state key syms_out)
-      ((force %func) (unwrap-xkb-state state) key syms_out))))
+(define-xkb-procedure (xkb-state-update-key state key direction)
+  (int "xkb_state_update_key" (list '* uint32 int))
+  (% (unwrap-xkb-state state) key direction))
+
+(define-xkb-procedure (xkb-state-update-mask state depressed_mods
+                                             latched_mods
+                                             locked_mods
+                                             depressed_layout
+                                             latched_layout
+                                             locked_layout)
+  (int "xkb_state_update_mask"
+       (list '* uint32 uint32 uint32 uint32 uint32 uint32))
+  (assert (xkb-state? state))
+  (% (unwrap-xkb-state state)
+     depressed_mods
+     latched_mods
+     locked_mods
+     depressed_layout
+     latched_layout
+     locked_layout))
+;; (define-xkb-procedure (xkb-state-key-get-syms state key syms_out)
+;;   (int
+;;    "xkb_state_key_get_syms" (list '* uint32 '*))
+;;   (assert (xkb-state? state))
+;;   (% (unwrap-xkb-state state) key syms_out))
 ;; (define-public xkb-state-key-get-utf8
 ;;   (let ((%func (pointer->procedure/deloy
 ;;                  int
@@ -712,180 +566,106 @@
 ;;              key
 ;;              (string->pointer buffer)
 ;;              size))))
-;; (define-public xkb-state-key-get-utf32
-;;   (let ((%func (pointer->procedure/deloy
-;;                  uint32
-;;                  (dynamic-func
-;;                    "xkb_state_key_get_utf32"
-;;                    (force %libxkbcommon))
-;;                  (list '* uint32))))
-;;     (lambda (state key)
-;;       ((force %func) (unwrap-xkb-state state) key))))
-(define-public xkb-state-key-get-one-sym
-  (let ((%func (pointer->procedure/deloy
-                uint32
-                (dynamic-func
-                 "xkb_state_key_get_one_sym"
-                 (force %libxkbcommon))
-                (list '* uint32))))
-    (lambda (state key)
-      ((force %func) (unwrap-xkb-state state) key))))
-(define-public xkb-state-key-get-layout
-  (let ((%func (pointer->procedure/deloy
-                 uint32
-                 (dynamic-func
-                   "xkb_state_key_get_layout"
-                   (force %libxkbcommon))
-                 (list '* uint32))))
-    (lambda (state key)
-      ((force %func) (unwrap-xkb-state state) key))))
-(define-public xkb-state-key-get-level
-  (let ((%func (pointer->procedure/deloy
-                uint32
-                (dynamic-func
-                 "xkb_state_key_get_level"
-                 (force %libxkbcommon))
-                (list '* uint32 uint32))))
-    (lambda (state key layout)
-      ((force %func) (unwrap-xkb-state state) key layout))))
+(define-xkb-procedure (xkb-state-key-get-utf32 state key)
+  (uint32 "xkb_state_key_get_utf32" (list '* xkb_keycode_t))
+  (% (unwrap-xkb-state state) key))
+
+(define-xkb-procedure (xkb-state-key-get-one-sym state key)
+  (uint32 "xkb_state_key_get_one_sym" (list '* uint32))
+  (% (unwrap-xkb-state state) key))
+
+(define-xkb-procedure (xkb-state-key-get-layout state key)
+  (uint32 "xkb_state_key_get_layout" (list '* uint32))
+  (% (unwrap-xkb-state state) key))
+
+(define-xkb-procedure (xkb-state-key-get-level state key layout)
+  (uint32
+   "xkb_state_key_get_level"
+   (list '* uint32 uint32))
+
+  (% (unwrap-xkb-state state) key layout))
+
 (define-public XKB_STATE_MATCH_ANY 1)
 (define-public XKB_STATE_MATCH_ALL 2)
 (define-public XKB_STATE_MATCH_NON_EXCLUSIVE 65536)
 
-(define-public xkb-state-serialize-mods
-  (let ((%func (pointer->procedure/deloy
-                uint32
-                (dynamic-func
-                 "xkb_state_serialize_mods"
-                 (force %libxkbcommon))
-                (list '* int))))
-    (lambda (state components)
-      ((force %func) (unwrap-xkb-state state)
-       components))))
+(define-xkb-procedure (xkb-state-serialize-mods state components)
+  (uint32 "xkb_state_serialize_mods" (list '* int))
+  (% (unwrap-xkb-state state) components))
 
-(define-public xkb-state-serialize-layout
-  (let ((%func (pointer->procedure/deloy
-                uint32
-                (dynamic-func
-                 "xkb_state_serialize_layout"
-                 (force %libxkbcommon))
-                (list '* int))))
-    (lambda (state components)
-      ((force %func) (unwrap-xkb-state state)
-       components))))
-(define-public xkb-state-mod-name-is-active
-  (let ((%func (pointer->procedure/deloy
-                int
-                (dynamic-func
-                 "xkb_state_mod_name_is_active"
-                 (force %libxkbcommon))
-                (list '* '* int))))
-    (lambda (state name type)
-      ((force %func) (unwrap-xkb-state state)
-       (string->pointer name)
-       type))))
-(define-public xkb-state-mod-index-is-active
-  (let ((%func (pointer->procedure/deloy
-                int
-                (dynamic-func
-                 "xkb_state_mod_index_is_active"
-                 (force %libxkbcommon))
-                (list '* uint32 int))))
-    (lambda (state idx type)
-      ((force %func) (unwrap-xkb-state state)
-       idx
-       type))))
-(begin
-  (define-public XKB_CONSUMED_MODE_XKB 0)
-  (define-public XKB_CONSUMED_MODE_GTK 1))
-(define-public xkb-state-key-get-consumed-mods2
-  (let ((%func (pointer->procedure/deloy
-                uint32
-                (dynamic-func
-                 "xkb_state_key_get_consumed_mods2"
-                 (force %libxkbcommon))
-                (list '* uint32 int))))
-    (lambda (state key mode)
-      ((force %func) (unwrap-xkb-state state)
-       key
-       mode))))
-(define-public xkb-state-key-get-consumed-mods
-  (let ((%func (pointer->procedure/deloy
-                 uint32
-                 (dynamic-func
-                   "xkb_state_key_get_consumed_mods"
-                   (force %libxkbcommon))
-                 (list '* uint32))))
-    (lambda (state key)
-      ((force %func) (unwrap-xkb-state state) key))))
-(define-public xkb-state-mod-index-is-consumed2
-  (let ((%func (pointer->procedure/deloy
-                int
-                (dynamic-func
-                 "xkb_state_mod_index_is_consumed2"
-                 (force %libxkbcommon))
-                (list '* uint32 uint32 int))))
-    (lambda (state key idx mode)
-      ((force %func) (unwrap-xkb-state state)
-       key
-       idx
-       mode))))
-(define-public xkb-state-mod-index-is-consumed
-  (let ((%func (pointer->procedure/deloy
-                 int
-                 (dynamic-func
-                   "xkb_state_mod_index_is_consumed"
-                   (force %libxkbcommon))
-                 (list '* uint32 uint32))))
-    (lambda (state key idx)
-      ((force %func) (unwrap-xkb-state state) key idx))))
-(define-public xkb-state-mod-mask-remove-consumed
-  (let ((%func (pointer->procedure/deloy
-                uint32
-                (dynamic-func
-                 "xkb_state_mod_mask_remove_consumed"
-                 (force %libxkbcommon))
-                (list '* uint32 uint32))))
-    (lambda (state key mask)
-      ((force %func) (unwrap-xkb-state state) key mask))))
-(define-public xkb-state-layout-name-is-active
-  (let ((%func (pointer->procedure/deloy
-                int
-                (dynamic-func
-                 "xkb_state_layout_name_is_active"
-                 (force %libxkbcommon))
-                (list '* '* int))))
-    (lambda (state name type)
-      ((force %func) (unwrap-xkb-state state)
-       (string->pointer name)
-       type))))
-(define-public xkb-state-layout-index-is-active
-  (let ((%func (pointer->procedure/deloy
-                int
-                (dynamic-func
-                 "xkb_state_layout_index_is_active"
-                 (force %libxkbcommon))
-                (list '* uint32 int))))
-    (lambda (state idx type)
-      ((force %func) (unwrap-xkb-state state)
-       idx
-       type))))
-(define-public xkb-state-led-name-is-active
-  (let ((%func (pointer->procedure/deloy
-                int
-                (dynamic-func
-                 "xkb_state_led_name_is_active"
-                 (force %libxkbcommon))
-                (list '* '*))))
-    (lambda (state name)
-      ((force %func) (unwrap-xkb-state state)
-       (string->pointer name)))))
-(define-public xkb-state-led-index-is-active
-  (let ((%func (pointer->procedure/deloy
-                int
-                (dynamic-func
-                 "xkb_state_led_index_is_active"
-                 (force %libxkbcommon))
-                (list '* uint32))))
-    (lambda (state idx)
-      ((force %func) (unwrap-xkb-state state) idx))))
+(define-xkb-procedure (xkb-state-serialize-layout state components)
+  (uint32
+   "xkb_state_serialize_layout" (list '* int))
+  (% (unwrap-xkb-state state) components))
+
+(define-xkb-procedure (xkb-state-mod-name-is-active state name type)
+  (int "xkb_state_mod_name_is_active" (list '* '* int))
+  (case-state-active
+   (% (unwrap-xkb-state state) (string->pointer name) type)
+   #:throw
+   (throw 'xkb-state-invalid "modifier name ~a does not exist in the keymap!" name)))
+
+(define-xkb-procedure (xkb-state-mod-index-is-active state idx type)
+  (int "xkb_state_mod_index_is_active" (list '* uint32 int))
+  (% (unwrap-xkb-state state) idx type))
+
+(define-public XKB_CONSUMED_MODE_XKB 0)
+(define-public XKB_CONSUMED_MODE_GTK 1)
+
+(define-xkb-procedure (xkb-state-key-get-consumed-mods2 state key mode)
+  (uint32 "xkb_state_key_get_consumed_mods2" (list '* uint32 int))
+  (% (unwrap-xkb-state state) key mode))
+
+(define-xkb-procedure (xkb-state-key-get-consumed-mods state key)
+  (uint32 "xkb_state_key_get_consumed_mods" (list '* uint32))
+  (% (unwrap-xkb-state state) key))
+
+(define-syntax-rule (case-state-active
+                     x
+                     #:throw
+                     throw)
+  (case x
+    ((1)#t)
+    ((0) #f)
+    ((-1) throw)))
+
+(define-xkb-procedure (xkb-state-mod-index-is-consumed2 state key idx mode)
+  (int "xkb_state_mod_index_is_consumed2" (list '* uint32 uint32 int))
+
+  (case-state-active (% (unwrap-xkb-state state) key idx mode)
+                     #:throw
+                     (throw 'xkb-state-invalid "~a modifier index is not valid in the keymap!" idx)))
+
+(define-xkb-procedure (xkb-state-mod-index-is-consumed state key idx)
+  (int "xkb_state_mod_index_is_consumed" (list '* uint32 uint32))
+  (case-state-active
+   (% (unwrap-xkb-state state) key idx)
+   #:throw
+   (throw 'xkb-state-invalid "~a modifier index is not valid in the keymap!" idx)))
+
+(define-xkb-procedure (xkb-state-mod-mask-remove-consumed state key mask)
+  (uint32 "xkb_state_mod_mask_remove_consumed" (list '* uint32 uint32))
+  (% (unwrap-xkb-state state) key mask))
+
+(define-xkb-procedure (xkb-state-layout-name-is-active state name type)
+  (int
+   "xkb_state_layout_name_is_active" (list '* '* int))
+  (% (unwrap-xkb-state state) (string->pointer name) type))
+
+(define-xkb-procedure (xkb-state-layout-index-is-active state idx type)
+  (int "xkb_state_layout_index_is_active" (list '* uint32 int))
+  (% (unwrap-xkb-state state) idx type))
+
+(define-xkb-procedure (xkb-state-led-name-is-active state name)
+  (int "xkb_state_led_name_is_active" (list '* '*))
+  (assert (xkb-state? state))
+  (% (unwrap-xkb-state state) (string->pointer name)))
+
+
+(define-xkb-procedure (xkb-state-led-index-is-active state idx)
+  (int "xkb_state_led_index_is_active" (list '* xkb_led_index_t))
+  (assert (xkb-state? state))
+  (case-state-active
+   (% (unwrap-xkb-state state) idx)
+   #:throw
+   (throw 'xkb-state-invalid "~a index is not valid in the keymap!" idx)))

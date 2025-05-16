@@ -41,15 +41,17 @@
 (define-syntax define-xkbregistry-procedure
   (lambda (x)
     (syntax-case x ()
-      ((_ (name args ...) (c-return c-name c-args) body ...)
+      ((_ (pname args ...) (c-return c-name c-args) body ...)
        (with-syntax ((% (datum->syntax x '%)))
          (syntax
-          (define-public name
+          (define-public pname
             (let ((% (pointer->procedure
                       c-return
                       (dynamic-func c-name (force %libxkbregistry))
                       c-args)))
-              (lambda (args ...) body ...)))))))))
+              (lambda (args ...)
+                #((name . pname))
+                body ...)))))))))
 
 (define (pointer->string* ptr)
   (if (null-pointer? ptr) #f (pointer->string ptr)))

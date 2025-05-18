@@ -636,12 +636,15 @@
                      #:throw
                      (throw 'xkb-state-invalid "~a modifier index is not valid in the keymap!" idx)))
 
+(define-public xkb-state-mod-index-consumed2? xkb-state-mod-index-is-consumed2)
+
 (define-xkb-procedure (xkb-state-mod-index-is-consumed state key idx)
   (int "xkb_state_mod_index_is_consumed" (list '* uint32 uint32))
   (case-state-active
    (% (unwrap-xkb-state state) key idx)
    #:throw
    (throw 'xkb-state-invalid "~a modifier index is not valid in the keymap!" idx)))
+(define-public xkb-state-mod-index-consumed? xkb-state-mod-index-is-consumed)
 
 (define-xkb-procedure (xkb-state-mod-mask-remove-consumed state key mask)
   (uint32 "xkb_state_mod_mask_remove_consumed" (list '* uint32 uint32))
@@ -651,16 +654,18 @@
   (int
    "xkb_state_layout_name_is_active" (list '* '* int))
   (% (unwrap-xkb-state state) (string->pointer name) type))
+(define-public xkb-state-layout-name-active? xkb-state-layout-name-is-active)
 
 (define-xkb-procedure (xkb-state-layout-index-is-active state idx type)
   (int "xkb_state_layout_index_is_active" (list '* uint32 int))
   (% (unwrap-xkb-state state) idx type))
+(define-public xkb-state-layout-index-active? xkb-state-layout-index-is-active)
 
 (define-xkb-procedure (xkb-state-led-name-is-active state name)
   (int "xkb_state_led_name_is_active" (list '* '*))
   (assert (xkb-state? state))
   (% (unwrap-xkb-state state) (string->pointer name)))
-
+(define-public xkb-state-led-name-active? xkb-state-led-name-is-active)
 
 (define-xkb-procedure (xkb-state-led-index-is-active state idx)
   (int "xkb_state_led_index_is_active" (list '* xkb_led_index_t))
@@ -669,3 +674,4 @@
    (% (unwrap-xkb-state state) idx)
    #:throw
    (throw 'xkb-state-invalid "~a index is not valid in the keymap!" idx)))
+(define-public xkb-state-led-index-active? xkb-state-led-index-is-active)

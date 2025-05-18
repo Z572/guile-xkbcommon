@@ -21,6 +21,15 @@
                      XKB_CONTEXT_NO_DEFAULT_INCLUDES)))
     (xkb-context-include-path-reset-defaults no-default)
     (xkb-context-include-path-get no-default 0)))
+(test-assert "xkb-context-get-log-level"
+  (xkb-context-get-log-level (xkb-context-new)))
+
+(test-equal "xkb-context-set-log-level!"
+  41
+  (let ((ctx (xkb-context-new)))
+    (xkb-context-set-log-level! ctx 41)
+    (xkb-context-get-log-level ctx)))
+
 (test-assert "xkb-keymap-new"
   (xkb-keymap? (xkb-keymap-new (xkb-context-new))))
 (test-assert "xkb-keymap-get-as-string"

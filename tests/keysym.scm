@@ -13,5 +13,17 @@
 (test-equal "xkb-keysym-from-name"
   (char->integer #\A) (xkb-keysym-from-name "A"))
 
+(test-equal "xkb-keysym-from-name"
+  (char->integer #\A) (xkb-keysym-from-name "A"))
+
+(test-equal "xkb-keysym-to-lower"
+  (char->integer #\a)
+  (xkb-keysym-to-lower
+   (xkb-keysym-from-name "A")))
+
+(test-equal "xkb-keysym-to-upper"
+  (char->integer #\A)
+  (xkb-keysym-to-upper
+   (xkb-keysym-from-name "a")))
 
 (test-end "keysym")

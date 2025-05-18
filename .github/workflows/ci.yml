@@ -16,8 +16,9 @@ jobs:
     - name: Guix cache
       uses: actions/cache@v3
       with:
-        path: ~/.cache/guix
+        path: .cache/guix
         key:  ${{runner.OS}}-guix
+        restore-keys:  ${{runner.OS}}-guix
     - name: Install Guix
       id: install-guix
       uses: PromyLOPh/guix-install-action@v1
